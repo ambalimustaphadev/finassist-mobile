@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:finassist/features/chat/data/repositories/mock_chat_repository.dart';
@@ -11,7 +12,10 @@ import 'support/pump_app.dart';
 /// single-session "End Chat" flow: starting a new conversation from the
 /// header "+", the drawer's recent-conversations list, reopening a
 /// previous conversation, and removing an attachment before analysis.
-Future<void> _openChat(WidgetTester tester) async {
+Future<void> _openChat(
+  WidgetTester tester, {
+  List<Override> extraOverrides = const [],
+}) async {
   await pumpApp(
     tester,
     overrides: [
@@ -21,6 +25,7 @@ Future<void> _openChat(WidgetTester tester) async {
       chatRepositoryProvider.overrideWithValue(
         MockChatRepository(MockFinancialRepository()),
       ),
+      ...extraOverrides,
     ],
   );
   await loginWithDemoAccount(tester);
@@ -125,28 +130,80 @@ void main() {
     },
   );
 
-  testWidgets('Removing an attachment before analysis cancels it', (
-    tester,
-  ) async {
-    await _openChat(tester);
+  testWidgets(
+    'Removing a composer attachment before Send cancels it — never uploaded, '
+    'never sent',
+    (tester) async {
+      await _openChat(tester);
 
-    await tester.tap(find.byIcon(Icons.attach_file_rounded));
-    await tester.pump();
-    final fileCard = find.text('GTBank_Statement.pdf');
-    await pumpUntil(tester, fileCard);
-    expect(fileCard, findsOneWidget);
+      // Picking a file only ever updates the composer's own local
+      // preview — nothing is uploaded or sent to the conversation yet.
+      await tester.tap(find.byIcon(Icons.attach_file_rounded));
+      await tester.pump();
+      final fileCard = find.text('GTBank_Statement.pdf');
+      await pumpUntil(tester, fileCard);
+      expect(fileCard, findsOneWidget);
 
-    // Remove it inside the cancel window, before analysis begins.
-    await tester.tap(find.byIcon(Icons.close_rounded));
-    await tester.pump();
+      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.pump();
 
-    expect(find.text('GTBank_Statement.pdf'), findsNothing);
+      expect(find.text('GTBank_Statement.pdf'), findsNothing);
 
-    // Give the (already-cancelled) analysis timer room to fire if it were
-    // going to, and confirm it never does.
-    await tester.pump(const Duration(seconds: 5));
-    expect(find.textContaining('finished analyzing'), findsNothing);
-  });
+      // Nothing was ever uploaded or sent, so there's nothing for an
+      // assistant reply to arrive from.
+      await tester.pump(const Duration(seconds: 5));
+      expect(find.textContaining('finished analyzing'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Attaching a file and typing a message sends both together as one turn',
+    (tester) async {
+      await _openChat(
+        tester,
+        extraOverrides: [
+          fileUploadRepositoryProvider.overrideWithValue(
+            FakeFileUploadRepository(),
+          ),
+        ],
+      );
+
+      // Pick a file — only the composer's own preview updates; nothing is
+      // uploaded or added to the conversation yet.
+      await tester.tap(find.byIcon(Icons.attach_file_rounded));
+      await tester.pump();
+      await pumpUntil(tester, find.text('GTBank_Statement.pdf'));
+      expect(find.text('GTBank_Statement.pdf'), findsOneWidget);
+      expect(find.text('What can I help you with?'), findsOneWidget);
+
+      // The user can still type alongside the attached file.
+      await tester.enterText(
+        find.byType(TextField),
+        'Summarize this statement.',
+      );
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
+      await tester.pump();
+
+      // The composer's own preview is cleared immediately on Send.
+      await pumpUntil(tester, find.text('Summarize this statement.'));
+      expect(find.text('What can I help you with?'), findsNothing);
+
+      // The message and its file tag now live together in the
+      // conversation, and the assistant eventually replies.
+      expect(find.text('Summarize this statement.'), findsOneWidget);
+      await pumpUntil(
+        tester,
+        find.descendant(
+          of: find.byType(Scaffold),
+          matching: find.text('GTBank_Statement.pdf'),
+        ),
+      );
+
+      // Drain the mock's straggler response timer.
+      await tester.pump(const Duration(milliseconds: 2200));
+    },
+  );
 
   testWidgets(
     'Deleting a recent conversation from its "..." menu removes it from the drawer',

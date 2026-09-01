@@ -8,6 +8,10 @@ import '../../../../core/constants/api_config.dart';
 import '../../../../core/services/statement_file_picker_service.dart';
 import '../../../../shared/models/uploaded_file_attachment.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
+import '../../../profile/data/local/financial_data_store.dart';
+import '../../../profile/data/models/uploaded_statement.dart';
+import '../../../profile/data/repositories/api_file_upload_repository.dart';
+import '../../../profile/data/repositories/file_upload_repository.dart';
 import '../../data/local/local_conversation_store.dart';
 import '../../data/models/chat_message.dart';
 import '../../data/models/conversation.dart';
@@ -28,6 +32,25 @@ final statementFilePickerServiceProvider = Provider<StatementFilePickerService>(
   },
 );
 
+/// Swap for a fake in tests — the HTTP client that actually sends a
+/// picked file to `POST /api/files/upload`. Defined here (rather than in
+/// the profile feature, which also uses it) so both Chat's composer
+/// attachment flow and Profile's statement upload share the exact same
+/// provider instance instead of each standing up their own — one upload
+/// pipeline, not two.
+final fileUploadRepositoryProvider = Provider<FileUploadRepository>((ref) {
+  return ApiFileUploadRepository(baseUrl: apiBaseUrl);
+});
+
+/// Swap for a fake in tests. Defined here for the same reason as
+/// [fileUploadRepositoryProvider]: both Chat's composer attachment flow
+/// and Profile's "Uploaded statements" screen record into the same local
+/// cache, so a document uploaded from either one shows up in both —
+/// there's no separate "Chat files" vs. "Profile files" list.
+final financialDataStoreProvider = Provider<FinancialDataStore>((ref) {
+  return FinancialDataStore();
+});
+
 /// Local (on-device) cache of conversations/messages — see
 /// `LocalConversationStore`'s doc comment for how it relates to the
 /// backend, which is the source of truth whenever it's reachable.
@@ -47,6 +70,8 @@ final chatControllerProvider = StateNotifierProvider<ChatController, ChatState>(
     return ChatController(
       ref.watch(chatRepositoryProvider),
       ref.watch(statementFilePickerServiceProvider),
+      ref.watch(fileUploadRepositoryProvider),
+      ref.watch(financialDataStoreProvider),
       ref.watch(localConversationStoreProvider),
       userId,
     );
@@ -82,15 +107,28 @@ String _takeNextRevealChunk(String pending) {
 }
 
 class ChatController extends StateNotifier<ChatState> {
-  ChatController(this._repository, this._filePicker, this._store, this._userId)
-    : super(const ChatState()) {
+  ChatController(
+    this._repository,
+    this._filePicker,
+    this._uploadRepository,
+    this._financialDataStore,
+    this._store,
+    this._userId,
+  ) : super(const ChatState()) {
     _bootstrap();
   }
 
   final ChatRepository _repository;
   final StatementFilePickerService _filePicker;
+  final FileUploadRepository _uploadRepository;
+  final FinancialDataStore _financialDataStore;
   final LocalConversationStore _store;
   final String _userId;
+
+  /// True only while [sendMessage] is uploading a composer attachment —
+  /// see its doc comment for why this is narrower than gating on
+  /// `state.isAssistantTyping`.
+  bool _isUploadingAttachment = false;
 
   /// Identifies the currently in-flight progressive-reveal animation, if
   /// any. Each call to [_streamAssistantReply] mints a fresh token and
@@ -301,15 +339,90 @@ class ChatController extends StateNotifier<ChatState> {
     unawaited(_store.deleteConversation(_userId, conversationId));
   }
 
-  Future<void> sendMessage(String text) async {
+  /// Sends [text], optionally with a [attachment] the user picked in the
+  /// composer but hasn't uploaded yet (see `ChatComposer`'s doc comment —
+  /// picking a file only ever updates local UI state until this point).
+  ///
+  /// When an attachment is present, this uploads it first
+  /// (`POST /api/files/upload`) and only proceeds to the chat request if
+  /// that succeeds — an upload failure surfaces via
+  /// [ChatState.attachmentUploadError] and the chat request is never
+  /// sent, so nothing reaches the model without its file having actually
+  /// made it to the server.
+  Future<void> sendMessage(String text, {PickedFile? attachment}) async {
     final trimmed = text.trim();
-    if (trimmed.isEmpty) return;
+    if (trimmed.isEmpty && attachment == null) return;
+    // Guards against a duplicate Send firing a second upload while one is
+    // already running — narrower than blocking on `isAssistantTyping` in
+    // general, which must stay interruptible: sending a new message (or
+    // a quick action/follow-up chip) while the assistant is still
+    // replying to a previous one is existing, tested behavior — it
+    // cancels/flushes that reveal and starts fresh (see
+    // `_dispatchUserMessage`'s `_cancelActiveReveal()`).
+    if (_isUploadingAttachment) return;
+
+    UploadedFileAttachment? fileAttachment;
+    String? fileUrl;
+
+    if (attachment != null) {
+      _isUploadingAttachment = true;
+      state = state.copyWith(
+        isAssistantTyping: true,
+        typingLabel: 'Uploading ${attachment.name}...',
+        clearStreamingMessageId: true,
+      );
+      try {
+        final file = await resolvePickedFile(attachment);
+        if (file == null) throw Exception('Could not read the picked file.');
+        final uploaded = await _uploadRepository.uploadFile(file);
+        fileUrl = uploaded.fileUrl;
+        fileAttachment = UploadedFileAttachment(
+          fileName: uploaded.filename,
+          extension: attachment.extension,
+          sizeBytes: uploaded.size,
+        );
+        // The document is now on the server regardless of whether the
+        // chat request below succeeds — record it in the same local
+        // cache Profile's "Uploaded statements" reads from immediately,
+        // rather than only if the AI reply also goes through.
+        unawaited(
+          _financialDataStore.addStatement(
+            _userId,
+            UploadedStatement(
+              id: 'stmt-${uploaded.id}',
+              fileName: uploaded.filename,
+              uploadedAt: DateTime.now(),
+              fileUrl: uploaded.fileUrl,
+            ),
+          ),
+        );
+      } on FileUploadUnauthorizedException {
+        state = state.copyWith(
+          isAssistantTyping: false,
+          clearTypingLabel: true,
+          attachmentUploadError:
+              'Your session has expired. Please log in again.',
+        );
+        return;
+      } catch (_) {
+        state = state.copyWith(
+          isAssistantTyping: false,
+          clearTypingLabel: true,
+          attachmentUploadError: "Couldn't upload that file. Please try again.",
+        );
+        return;
+      } finally {
+        _isUploadingAttachment = false;
+      }
+    }
 
     final userMessage = ChatMessage(
       id: 'user-${DateTime.now().microsecondsSinceEpoch}',
       role: ChatMessageRole.user,
       text: trimmed,
       timestamp: DateTime.now(),
+      fileAttachment: fileAttachment,
+      pendingFileUrl: fileUrl,
     );
 
     state = state.copyWith(
@@ -320,6 +433,13 @@ class ChatController extends StateNotifier<ChatState> {
     );
 
     await _dispatchUserMessage(userMessage);
+  }
+
+  /// Dismisses [ChatState.attachmentUploadError] after the UI has shown
+  /// it — same one-shot pattern as [dismissUploadStatus] elsewhere.
+  void dismissAttachmentUploadError() {
+    if (state.attachmentUploadError == null) return;
+    state = state.copyWith(clearAttachmentUploadError: true);
   }
 
   /// Re-sends a message that previously failed, in place. Goes through the
@@ -367,6 +487,7 @@ class ChatController extends StateNotifier<ChatState> {
     await _streamAssistantReply(
       conversationId: conversationId,
       userMessage: userMessage.text,
+      fileUrl: userMessage.pendingFileUrl,
       onFailure: () => _markSendFailed(userMessage.id),
     );
   }
@@ -430,6 +551,7 @@ class ChatController extends StateNotifier<ChatState> {
   Future<void> _streamAssistantReply({
     required String conversationId,
     required String userMessage,
+    String? fileUrl,
     VoidCallback? onFailure,
   }) async {
     final assistantId = 'ai-${DateTime.now().microsecondsSinceEpoch}';
@@ -541,6 +663,7 @@ class ChatController extends StateNotifier<ChatState> {
       await for (final chunk in _repository.sendMessage(
         conversationId,
         userMessage,
+        fileUrl: fileUrl,
       )) {
         if (!isActive()) return;
 

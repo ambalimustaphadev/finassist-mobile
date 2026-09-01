@@ -10,6 +10,7 @@ class UploadedStatement {
     required this.uploadedAt,
     this.periodStart,
     this.periodEnd,
+    this.fileUrl,
   });
 
   final String id;
@@ -18,12 +19,19 @@ class UploadedStatement {
   final DateTime? periodStart;
   final DateTime? periodEnd;
 
+  /// The R2-accessible URL returned by `POST /api/files/upload` —
+  /// cached locally so tapping this statement can open the real document
+  /// without a separate backend round trip. Null for statements uploaded
+  /// before this field existed.
+  final String? fileUrl;
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'fileName': fileName,
     'uploadedAt': uploadedAt.toIso8601String(),
     'periodStart': periodStart?.toIso8601String(),
     'periodEnd': periodEnd?.toIso8601String(),
+    'fileUrl': fileUrl,
   };
 
   factory UploadedStatement.fromJson(Map<String, dynamic> json) {
@@ -39,6 +47,7 @@ class UploadedStatement {
       periodEnd: json['periodEnd'] == null
           ? null
           : DateTime.tryParse(json['periodEnd'].toString()),
+      fileUrl: json['fileUrl'] as String?,
     );
   }
 }

@@ -1,24 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/services/statement_file_picker_service.dart';
+import '../../../../shared/models/uploaded_file_attachment.dart';
+import '../providers/chat_controller.dart';
+import 'file_attachment_card.dart';
 
-/// The bottom message composer: attachment affordance, text field and a
-/// circular send button.
-class ChatComposer extends StatefulWidget {
-  const ChatComposer({super.key, required this.onSend, required this.onAttach});
+/// The bottom message composer: attachment affordance, an optional
+/// attached-file preview, a text field and a circular send button.
+///
+/// Picking a file only updates this widget's own local state — it is
+/// never uploaded, analyzed, or sent until the user actually taps Send,
+/// at which point the text and the attachment go to
+/// [ChatController.sendMessage] together (see its doc comment for the
+/// upload-then-chat sequencing).
+class ChatComposer extends ConsumerStatefulWidget {
+  const ChatComposer({super.key, required this.onSend});
 
-  final ValueChanged<String> onSend;
-  final VoidCallback onAttach;
+  final void Function(String text, PickedFile? attachment) onSend;
 
   @override
-  State<ChatComposer> createState() => _ChatComposerState();
+  ConsumerState<ChatComposer> createState() => _ChatComposerState();
 }
 
-class _ChatComposerState extends State<ChatComposer> {
+class _ChatComposerState extends ConsumerState<ChatComposer> {
   final _controller = TextEditingController();
   bool _hasText = false;
+  PickedFile? _attachment;
+  bool _isPicking = false;
 
   @override
   void initState() {
@@ -35,14 +47,55 @@ class _ChatComposerState extends State<ChatComposer> {
     super.dispose();
   }
 
+  Future<void> _handleAttach() async {
+    if (_isPicking) return;
+    setState(() => _isPicking = true);
+    try {
+      final picked = await ref
+          .read(statementFilePickerServiceProvider)
+          .pickStatementFile();
+      // A `null` result means the user cancelled the picker — nothing
+      // happens, exactly as if they'd never tapped the button.
+      if (picked != null && mounted) setState(() => _attachment = picked);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.surfaceElevated,
+            content: Text(
+              "Couldn't open the file picker. Please try again.",
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
+          ),
+        );
+    } finally {
+      if (mounted) setState(() => _isPicking = false);
+    }
+  }
+
+  void _removeAttachment() => setState(() => _attachment = null);
+
   void _submit() {
-    if (!_hasText) return;
-    widget.onSend(_controller.text);
+    final text = _controller.text;
+    if (text.trim().isEmpty && _attachment == null) return;
+    widget.onSend(text, _attachment);
     _controller.clear();
+    setState(() => _attachment = null);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Disabled (not just visually, but functionally) while the
+    // controller is mid-upload or waiting on the assistant's reply, so a
+    // stray extra tap can never fire a second send.
+    final isBusy = ref.watch(
+      chatControllerProvider.select((s) => s.isAssistantTyping),
+    );
+    final hasContent = (_hasText || _attachment != null) && !isBusy;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -50,55 +103,92 @@ class _ChatComposerState extends State<ChatComposer> {
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
+        borderRadius: BorderRadius.circular(
+          _attachment != null ? AppRadius.xl : AppRadius.pill,
+        ),
         border: Border.all(color: AppColors.borderSubtle),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Semantics(
-            button: true,
-            label: 'Attach a bank statement',
-            child: Material(
-              color: Colors.transparent,
-              shape: const CircleBorder(),
-              child: InkWell(
-                onTap: widget.onAttach,
-                customBorder: const CircleBorder(),
-                child: const Padding(
-                  padding: EdgeInsets.all(6),
-                  child: Icon(
-                    Icons.attach_file_rounded,
-                    color: AppColors.textSecondary,
-                    size: 20,
+          if (_attachment != null) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xs,
+                AppSpacing.xs,
+                AppSpacing.xs,
+                0,
+              ),
+              child: FileAttachmentCard(
+                attachment: UploadedFileAttachment(
+                  fileName: _attachment!.name,
+                  extension: _attachment!.extension,
+                  sizeBytes: _attachment!.sizeBytes,
+                ),
+                onRemove: isBusy ? null : _removeAttachment,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+          ],
+          Row(
+            children: [
+              Semantics(
+                button: true,
+                label: 'Attach a financial document',
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    onTap: isBusy ? null : _handleAttach,
+                    customBorder: const CircleBorder(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: _isPicking
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.textSecondary,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.attach_file_rounded,
+                              color: AppColors.textSecondary,
+                              size: 20,
+                            ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              style: AppTypography.chatMessage.copyWith(
-                color: AppColors.textPrimary,
-              ),
-              textInputAction: TextInputAction.send,
-              keyboardType: TextInputType.multiline,
-              minLines: 1,
-              maxLines: 5,
-              onSubmitted: (_) => _submit(),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                isCollapsed: true,
-                hintText: 'Ask FinAssist...',
-                hintStyle: AppTypography.body.copyWith(
-                  color: AppColors.textMuted,
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  enabled: !isBusy,
+                  style: AppTypography.chatMessage.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                  textInputAction: TextInputAction.send,
+                  keyboardType: TextInputType.multiline,
+                  minLines: 1,
+                  maxLines: 5,
+                  onSubmitted: (_) => _submit(),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    isCollapsed: true,
+                    hintText: 'Ask FinAssist...',
+                    hintStyle: AppTypography.body.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: AppSpacing.sm),
+              _SendButton(enabled: hasContent, onTap: _submit),
+            ],
           ),
-          const SizedBox(width: AppSpacing.sm),
-          _SendButton(enabled: _hasText, onTap: _submit),
         ],
       ),
     );
@@ -136,7 +226,7 @@ class _SendButtonState extends State<_SendButton> {
           color: widget.enabled ? AppColors.accent : AppColors.surfaceElevated,
           shape: const CircleBorder(),
           child: InkWell(
-            onTap: widget.onTap,
+            onTap: widget.enabled ? widget.onTap : null,
             onTapDown: (_) => _setPressed(true),
             onTapCancel: () => _setPressed(false),
             onTapUp: (_) => _setPressed(false),

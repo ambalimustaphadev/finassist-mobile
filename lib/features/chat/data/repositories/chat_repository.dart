@@ -44,10 +44,16 @@ abstract class ChatRepository {
   /// Streams the assistant's reply to [userMessage] within
   /// [conversationId]. See [ChatStreamChunk] for how implementations are
   /// expected to emit chunks.
+  ///
+  /// [fileUrl] is the R2-accessible URL of a file the user attached to
+  /// this turn (from [FileUploadRepository.uploadFile], already uploaded
+  /// by the time this is called) — passed straight through to the
+  /// backend so the model can read the document alongside the message.
   Stream<ChatStreamChunk> sendMessage(
     String conversationId,
-    String userMessage,
-  );
+    String userMessage, {
+    String? fileUrl,
+  });
 
   /// Analyzes an uploaded statement file and returns the assistant's
   /// summary plus the period it covers. A separate feature from the

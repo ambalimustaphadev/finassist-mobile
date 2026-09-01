@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// File extensions FinAssist accepts for a bank statement upload.
 const List<String> supportedStatementExtensions = [
@@ -68,5 +70,29 @@ class FilePickerStatementService implements StatementFilePickerService {
       path: file.path,
       bytes: file.bytes,
     );
+  }
+}
+
+/// Turns a [PickedFile] into a real [File] to upload — shared by every
+/// caller that picks via [StatementFilePickerService] and then needs to
+/// read the bytes back (Profile's statement upload, Chat's composer
+/// attachment). Prefers [PickedFile.path] (memory-efficient — streams
+/// straight off disk); if the platform didn't provide one, falls back to
+/// writing [PickedFile.bytes] to a temp file so the same upload path
+/// still works. Returns `null` (never throws) if neither is available,
+/// which callers turn into a friendly error instead of a crash.
+Future<File?> resolvePickedFile(PickedFile picked) async {
+  final path = picked.path;
+  if (path != null) return File(path);
+
+  final bytes = picked.bytes;
+  if (bytes == null) return null;
+
+  try {
+    final dir = await getTemporaryDirectory();
+    final tempFile = File('${dir.path}/${picked.name}');
+    return await tempFile.writeAsBytes(bytes);
+  } catch (_) {
+    return null;
   }
 }

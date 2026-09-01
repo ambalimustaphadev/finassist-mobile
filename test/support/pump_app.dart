@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +11,8 @@ import 'package:finassist/app/theme/app_theme.dart';
 import 'package:finassist/core/services/statement_file_picker_service.dart';
 import 'package:finassist/features/auth/data/repositories/mock_auth_repository.dart';
 import 'package:finassist/features/auth/presentation/providers/auth_controller.dart';
+import 'package:finassist/features/profile/data/models/uploaded_file.dart';
+import 'package:finassist/features/profile/data/repositories/file_upload_repository.dart';
 
 /// `flutter_secure_storage` talks to native code over a MethodChannel that
 /// doesn't exist in a widget-test environment. Left unmocked, a call on it
@@ -43,6 +48,21 @@ void _mockSecureStorage(TestWidgetsFlutterBinding binding) {
   );
 }
 
+/// `path_provider`'s MethodChannel doesn't exist in a widget-test
+/// environment either — needed since `FakeStatementFilePickerService`'s
+/// canned pick has no `path` (only `bytes`), so resolving it for an
+/// upload falls back to `getTemporaryDirectory()`. Left unmocked, that
+/// call would throw and every attach-then-send test would silently fail
+/// to ever add the message.
+const _pathProviderChannel = MethodChannel('plugins.flutter.io/path_provider');
+
+void _mockPathProvider(TestWidgetsFlutterBinding binding) {
+  binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    _pathProviderChannel,
+    (call) async => Directory.systemTemp.path,
+  );
+}
+
 /// Shared test helpers.
 ///
 /// The real app now opens on a splash screen (`AppRoutes.splash`) that
@@ -64,7 +84,9 @@ Future<void> pumpApp(
   WidgetTester tester, {
   List<Override> overrides = const [],
 }) async {
-  _mockSecureStorage(TestWidgetsFlutterBinding.ensureInitialized());
+  final binding = TestWidgetsFlutterBinding.ensureInitialized();
+  _mockSecureStorage(binding);
+  _mockPathProvider(binding);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -99,10 +121,41 @@ Future<void> pumpUntil(
 class FakeStatementFilePickerService implements StatementFilePickerService {
   @override
   Future<PickedFile?> pickStatementFile() async {
-    return const PickedFile(
+    // A real widget test's `file_picker` result always carries a path
+    // (or bytes) to actually read the file back from for an upload —
+    // written here as a real temp file so a test exercising the real
+    // upload path has something to resolve. Deliberately synchronous
+    // (`writeAsBytesSync`, not the `Future`-returning variant): this
+    // runs as a reaction to `tester.tap()` inside `WidgetTester.pump()`'s
+    // controlled execution, where a genuinely-async `dart:io` operation
+    // (one not driven by the test binding's own clock) never resolves —
+    // a synchronous call has no such gap to get stuck in.
+    final file = File(
+      '${Directory.systemTemp.path}/GTBank_Statement_${DateTime.now().microsecondsSinceEpoch}.pdf',
+    )..writeAsBytesSync(utf8.encode('%PDF-1.4 fake statement'));
+
+    return PickedFile(
       name: 'GTBank_Statement.pdf',
       extension: 'pdf',
       sizeBytes: 245000,
+      path: file.path,
+    );
+  }
+}
+
+/// Swap for `fileUploadRepositoryProvider` in tests that need the upload
+/// step to succeed without touching a real HTTP client — mirrors
+/// `MockChatRepository`'s "always succeeds" role for the chat repository.
+class FakeFileUploadRepository implements FileUploadRepository {
+  @override
+  Future<UploadedFile> uploadFile(File file) async {
+    return const UploadedFile(
+      id: 1,
+      filename: 'GTBank_Statement.pdf',
+      size: 245000,
+      contentType: 'application/pdf',
+      key: 'statement/1/fake-uuid.pdf',
+      fileUrl: 'https://pub-test.r2.dev/statement/1/fake-uuid.pdf',
     );
   }
 }

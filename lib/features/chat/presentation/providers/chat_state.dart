@@ -26,6 +26,7 @@ class ChatState {
     this.statementPeriodEnd,
     this.pendingAttachmentMessageId,
     this.lastFailedAttachment,
+    this.attachmentUploadError,
   });
 
   /// Recent conversations, most-recently-updated first. Backed by the
@@ -76,6 +77,13 @@ class ChatState {
   /// something to retry.
   final UploadedFileAttachment? lastFailedAttachment;
 
+  /// A one-shot, user-facing message set when uploading a composer
+  /// attachment fails (so the chat request is never sent) — the chat
+  /// screen shows it as a snackbar and immediately dismisses it, the same
+  /// transient-feedback pattern [conversationError] uses for a different
+  /// case.
+  final String? attachmentUploadError;
+
   bool get isNewConversation => currentConversationId == null;
 
   ChatState copyWith({
@@ -104,6 +112,8 @@ class ChatState {
     bool clearPendingAttachment = false,
     UploadedFileAttachment? lastFailedAttachment,
     bool clearLastFailedAttachment = false,
+    String? attachmentUploadError,
+    bool clearAttachmentUploadError = false,
   }) {
     return ChatState(
       conversations: conversations ?? this.conversations,
@@ -136,6 +146,9 @@ class ChatState {
       lastFailedAttachment: clearLastFailedAttachment
           ? null
           : (lastFailedAttachment ?? this.lastFailedAttachment),
+      attachmentUploadError: clearAttachmentUploadError
+          ? null
+          : (attachmentUploadError ?? this.attachmentUploadError),
     );
   }
 }

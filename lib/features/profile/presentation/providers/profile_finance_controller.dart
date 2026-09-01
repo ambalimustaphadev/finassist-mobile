@@ -1,32 +1,18 @@
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 
-import '../../../../core/constants/api_config.dart';
 import '../../../../core/services/statement_file_picker_service.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../chat/presentation/providers/chat_controller.dart';
 import '../../data/local/financial_data_store.dart';
 import '../../data/models/uploaded_statement.dart';
-import '../../data/repositories/api_file_upload_repository.dart';
 import '../../data/repositories/file_upload_repository.dart';
-
-/// Swap for a fake in tests.
-final financialDataStoreProvider = Provider<FinancialDataStore>((ref) {
-  return FinancialDataStore();
-});
-
-/// Swap for a fake in tests — the HTTP client that actually sends a
-/// picked file to `POST /api/files/upload`.
-final fileUploadRepositoryProvider = Provider<FileUploadRepository>((ref) {
-  return ApiFileUploadRepository(baseUrl: apiBaseUrl);
-});
 
 /// Rebuilt per authenticated user, same as `chatControllerProvider` and
 /// `profileImageControllerProvider`. Reuses the existing
-/// `statementFilePickerServiceProvider` rather than inventing a parallel
-/// file-picking flow.
+/// `statementFilePickerServiceProvider`, `fileUploadRepositoryProvider`
+/// and `financialDataStoreProvider` (all defined in `chat_controller.dart`
+/// since Chat's composer attachment flow shares them too) rather than
+/// inventing a parallel upload pipeline.
 final profileFinanceControllerProvider =
     StateNotifierProvider<ProfileFinanceController, ProfileFinanceState>((ref) {
       final userId =
@@ -144,7 +130,7 @@ class ProfileFinanceController extends StateNotifier<ProfileFinanceState> {
     );
 
     try {
-      final file = await _resolveFile(picked);
+      final file = await resolvePickedFile(picked);
       if (file == null) {
         state = state.copyWith(
           uploadStatus: StatementUploadStatus.error,
@@ -158,6 +144,7 @@ class ProfileFinanceController extends StateNotifier<ProfileFinanceState> {
         id: 'stmt-${uploaded.id}',
         fileName: uploaded.filename,
         uploadedAt: DateTime.now(),
+        fileUrl: uploaded.fileUrl,
       );
       await _store.addStatement(_userId, record);
       state = state.copyWith(
@@ -175,29 +162,6 @@ class ProfileFinanceController extends StateNotifier<ProfileFinanceState> {
         uploadStatus: StatementUploadStatus.error,
         uploadMessage: "Couldn't upload that statement. Please try again.",
       );
-    }
-  }
-
-  /// Turns a [PickedFile] into a real [File] to read the upload from.
-  /// Prefers [PickedFile.path] (memory-efficient — `MultipartFile.fromPath`
-  /// streams it straight off disk); if the platform didn't provide one,
-  /// falls back to writing [PickedFile.bytes] to a temp file so the same
-  /// upload path still works. Returns `null` (never throws) if neither is
-  /// available, which the caller turns into a friendly error instead of a
-  /// crash.
-  Future<File?> _resolveFile(PickedFile picked) async {
-    final path = picked.path;
-    if (path != null) return File(path);
-
-    final bytes = picked.bytes;
-    if (bytes == null) return null;
-
-    try {
-      final dir = await getTemporaryDirectory();
-      final tempFile = File('${dir.path}/${picked.name}');
-      return await tempFile.writeAsBytes(bytes);
-    } catch (_) {
-      return null;
     }
   }
 

@@ -156,8 +156,9 @@ class ApiChatRepository implements ChatRepository {
   @override
   Stream<ChatStreamChunk> sendMessage(
     String conversationId,
-    String userMessage,
-  ) async* {
+    String userMessage, {
+    String? fileUrl,
+  }) async* {
     final result = await _guarded(
       'Unable to get a response from FinAssist',
       () async {
@@ -170,6 +171,7 @@ class ApiChatRepository implements ChatRepository {
                 'conversation_id':
                     int.tryParse(conversationId) ?? conversationId,
                 'message': userMessage,
+                'file_url': ?fileUrl,
               }),
             )
             .timeout(_requestTimeout);

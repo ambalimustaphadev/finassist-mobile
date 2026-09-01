@@ -5,6 +5,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/extensions/formatting_extensions.dart';
+import '../../../../core/services/statement_file_picker_service.dart';
 import '../../../../shared/widgets/ai_avatar.dart';
 import '../../../../shared/widgets/fade_slide_in.dart';
 import '../../data/models/chat_message.dart';
@@ -163,6 +164,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ref.read(chatControllerProvider.notifier).sendMessage(text);
   }
 
+  /// Wired only to [ChatComposer], which (unlike quick actions/follow-ups)
+  /// can also carry a locally-picked attachment for this turn.
+  void _handleComposerSend(String text, PickedFile? attachment) {
+    ref
+        .read(chatControllerProvider.notifier)
+        .sendMessage(text, attachment: attachment);
+  }
+
   void _handleQuickAction(QuickAction action) {
     FocusScope.of(context).unfocus();
     if (action.triggersUpload) {
@@ -238,11 +247,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  /// Shows [ChatState.attachmentUploadError] as a one-shot snackbar and
+  /// dismisses it immediately after — the file failed to upload, so the
+  /// chat request was never sent (see `ChatController.sendMessage`'s doc
+  /// comment).
+  void _handleAttachmentUploadError(ChatState? previous, ChatState next) {
+    final error = next.attachmentUploadError;
+    if (error == null || error == previous?.attachmentUploadError) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.surfaceElevated,
+          content: Row(
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.negative,
+                size: 18,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  error,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    ref.read(chatControllerProvider.notifier).dismissAttachmentUploadError();
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatControllerProvider);
 
     ref.listen(chatControllerProvider, _handleChatStateChange);
+    ref.listen(chatControllerProvider, _handleAttachmentUploadError);
 
     // No Scaffold `appBar:` here on purpose — see ChatAppBar's doc comment.
     return Scaffold(
@@ -273,10 +318,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                     ],
-                    ChatComposer(
-                      onSend: _handleSendMessage,
-                      onAttach: _handleAttach,
-                    ),
+                    ChatComposer(onSend: _handleComposerSend),
                   ],
                 ),
               ),

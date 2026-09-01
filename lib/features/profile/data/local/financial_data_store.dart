@@ -40,8 +40,15 @@ class FinancialDataStore {
     await _storage.write(key: _key(userId), value: raw);
   }
 
+  /// Records [statement] locally — a no-op if one with the same [id] is
+  /// already present. Both Chat's composer attachment flow and Profile's
+  /// own upload button record here after a successful
+  /// `POST /api/files/upload`, and the backend itself hands back the same
+  /// file id for identical content re-uploaded, so this keeps a document
+  /// uploaded from either screen from ever appearing twice in the list.
   Future<void> addStatement(String userId, UploadedStatement statement) async {
     final existing = await loadStatements(userId);
+    if (existing.any((s) => s.id == statement.id)) return;
     await _saveStatements(userId, [statement, ...existing]);
   }
 

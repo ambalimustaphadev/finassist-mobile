@@ -9,6 +9,7 @@ class UploadedFile {
     required this.size,
     required this.contentType,
     required this.key,
+    required this.fileUrl,
   });
 
   final int id;
@@ -19,6 +20,12 @@ class UploadedFile {
   /// The object's storage key inside the R2 bucket — server-generated,
   /// never constructed on the Flutter side.
   final String key;
+
+  /// The R2-accessible URL for this object, as returned by the backend
+  /// (`Config.DEVELOPMENT_URL` + [key]) — the only file reference passed
+  /// to Chat or used to open the document. Flutter never constructs this
+  /// itself and never talks to R2 directly.
+  final String fileUrl;
 
   factory UploadedFile.fromJson(Map<String, dynamic> json) {
     return UploadedFile(
@@ -31,6 +38,7 @@ class UploadedFile {
           : int.tryParse(json['size'].toString()) ?? 0,
       contentType: (json['content_type'] ?? '').toString(),
       key: (json['key'] ?? '').toString(),
+      fileUrl: (json['file_url'] ?? '').toString(),
     );
   }
 }

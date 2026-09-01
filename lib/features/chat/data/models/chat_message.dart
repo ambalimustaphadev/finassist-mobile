@@ -41,6 +41,7 @@ class ChatMessage {
     this.notHelpfulReason,
     this.usedFinancialData,
     this.sendFailed = false,
+    this.pendingFileUrl,
   });
 
   final String id;
@@ -67,6 +68,13 @@ class ChatMessage {
   /// Populated when [messageType] is [ChatMessageType.fileAttachment] or
   /// [ChatMessageType.analysisError] (the file that failed to analyze).
   final UploadedFileAttachment? fileAttachment;
+
+  /// The R2 file_url already uploaded for this (user) message, if any —
+  /// carried only so [ChatController.retrySend] can resend the same chat
+  /// request without re-uploading a file that already succeeded. Purely
+  /// in-memory bookkeeping, never persisted (see [toJson]) and never
+  /// rendered — [fileAttachment] is what the UI shows.
+  final String? pendingFileUrl;
 
   /// Contextual prompts shown as chips beneath a substantive assistant
   /// answer, e.g. "Show transactions", "Compare with last month".
@@ -115,6 +123,7 @@ class ChatMessage {
           : (notHelpfulReason ?? this.notHelpfulReason),
       usedFinancialData: usedFinancialData,
       sendFailed: sendFailed ?? this.sendFailed,
+      pendingFileUrl: pendingFileUrl,
     );
   }
 

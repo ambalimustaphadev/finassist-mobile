@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -194,6 +195,44 @@ class _StatementTile extends StatelessWidget {
 
   final UploadedStatement statement;
 
+  Future<void> _open(BuildContext context) async {
+    final url = statement.fileUrl;
+    if (url == null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.surfaceElevated,
+            content: Text(
+              "This statement doesn't have a document to open.",
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
+          ),
+        );
+      return;
+    }
+
+    final uri = Uri.tryParse(url);
+    final opened =
+        uri != null &&
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.surfaceElevated,
+            content: Text(
+              "Couldn't open this document.",
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
+          ),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasPeriod =
@@ -201,6 +240,7 @@ class _StatementTile extends StatelessWidget {
     return AppCard(
       color: AppColors.surfaceElevated,
       padding: const EdgeInsets.all(AppSpacing.md),
+      onTap: () => _open(context),
       child: Row(
         children: [
           const IconBadge(

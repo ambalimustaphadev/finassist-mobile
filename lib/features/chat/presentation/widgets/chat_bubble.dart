@@ -89,10 +89,19 @@ class ChatBubble extends ConsumerWidget {
                             : null,
                       )
                     // --------------------------------------------
-                    // NORMAL MESSAGE
+                    // NORMAL MESSAGE (optionally with a file the user
+                    // attached to this turn from the composer, shown as
+                    // a compact tag above the text bubble rather than
+                    // replacing it — unlike the standalone FILE
+                    // ATTACHMENT case above, this message has real text
+                    // alongside its file).
                     // --------------------------------------------
                     else if (message.messageType !=
-                        ChatMessageType.analysisError)
+                        ChatMessageType.analysisError) ...[
+                      if (message.fileAttachment != null) ...[
+                        FileAttachmentCard(attachment: message.fileAttachment!),
+                        const SizedBox(height: AppSpacing.xs),
+                      ],
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.lg,
@@ -222,7 +231,8 @@ class ChatBubble extends ConsumerWidget {
                                   ),
                                 ),
                               ),
-                      )
+                      ),
+                    ]
                     // --------------------------------------------
                     // ANALYSIS ERROR
                     // --------------------------------------------

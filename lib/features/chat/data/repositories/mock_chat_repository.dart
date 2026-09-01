@@ -116,8 +116,9 @@ class MockChatRepository implements ChatRepository {
   @override
   Stream<ChatStreamChunk> sendMessage(
     String conversationId,
-    String userMessage,
-  ) async* {
+    String userMessage, {
+    String? fileUrl,
+  }) async* {
     final conversation = _conversations[conversationId];
     if (conversation == null) {
       throw const ChatConversationNotFoundException();
