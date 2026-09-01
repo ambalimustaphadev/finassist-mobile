@@ -7,6 +7,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/extensions/formatting_extensions.dart';
 import '../../../../shared/widgets/ai_avatar.dart';
+import '../../../../shared/widgets/document_viewer_screen.dart';
 import '../../data/models/chat_message.dart';
 import '../providers/chat_controller.dart';
 import 'analysis_error_card.dart';
@@ -99,7 +100,18 @@ class ChatBubble extends ConsumerWidget {
                     else if (message.messageType !=
                         ChatMessageType.analysisError) ...[
                       if (message.fileAttachment != null) ...[
-                        FileAttachmentCard(attachment: message.fileAttachment!),
+                        FileAttachmentCard(
+                          attachment: message.fileAttachment!,
+                          onTap: message.fileAttachment!.fileUrl == null
+                              ? null
+                              : () => openDocumentViewer(
+                                  context,
+                                  fileUrl: message.fileAttachment!.fileUrl,
+                                  filename: message.fileAttachment!.fileName,
+                                  contentType:
+                                      message.fileAttachment!.contentType,
+                                ),
+                        ),
                         const SizedBox(height: AppSpacing.xs),
                       ],
                       Container(

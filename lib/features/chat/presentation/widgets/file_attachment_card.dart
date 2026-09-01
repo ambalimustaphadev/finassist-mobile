@@ -14,6 +14,7 @@ class FileAttachmentCard extends StatelessWidget {
     super.key,
     required this.attachment,
     this.onRemove,
+    this.onTap,
   });
 
   final UploadedFileAttachment attachment;
@@ -22,6 +23,11 @@ class FileAttachmentCard extends StatelessWidget {
   /// has started for this file.
   final VoidCallback? onRemove;
 
+  /// When set, the whole card opens the shared in-app document viewer —
+  /// only meaningful once the file has actually been uploaded (has a
+  /// [UploadedFileAttachment.fileUrl] to open).
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final visual = _fileVisualFor(attachment.extensionLabel);
@@ -29,6 +35,7 @@ class FileAttachmentCard extends StatelessWidget {
     return AppCard(
       color: AppColors.surfaceElevated,
       padding: const EdgeInsets.all(AppSpacing.md),
+      onTap: onTap,
       child: Row(
         children: [
           IconBadge(

@@ -1,6 +1,8 @@
-/// A bank statement the user has uploaded and had analyzed, as tracked
+/// A financial document (a bank statement today; investment/loan/insurance
+/// documents and other financial reports are the same shape, per the
+/// Documents page's broader remit) the user has uploaded, as tracked
 /// locally on this device. There is no backend endpoint yet for listing a
-/// user's statements server-side (see `ProfileFinanceController`'s doc
+/// user's documents server-side (see `ProfileFinanceController`'s doc
 /// comment) — this is real data about what actually happened on this
 /// device, not a placeholder.
 class UploadedStatement {
@@ -11,6 +13,7 @@ class UploadedStatement {
     this.periodStart,
     this.periodEnd,
     this.fileUrl,
+    this.contentType,
   });
 
   final String id;
@@ -20,10 +23,16 @@ class UploadedStatement {
   final DateTime? periodEnd;
 
   /// The R2-accessible URL returned by `POST /api/files/upload` —
-  /// cached locally so tapping this statement can open the real document
-  /// without a separate backend round trip. Null for statements uploaded
-  /// before this field existed.
+  /// cached locally so tapping this document can open it (via the shared
+  /// document viewer) without a separate backend round trip. Null for
+  /// documents uploaded before this field existed.
   final String? fileUrl;
+
+  /// The backend's reported MIME type, when known — lets the document
+  /// viewer pick a renderer without guessing from the filename alone.
+  /// Null for documents uploaded before this field existed; the viewer
+  /// falls back to the filename's extension in that case.
+  final String? contentType;
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -32,6 +41,7 @@ class UploadedStatement {
     'periodStart': periodStart?.toIso8601String(),
     'periodEnd': periodEnd?.toIso8601String(),
     'fileUrl': fileUrl,
+    'contentType': contentType,
   };
 
   factory UploadedStatement.fromJson(Map<String, dynamic> json) {
@@ -48,6 +58,7 @@ class UploadedStatement {
           ? null
           : DateTime.tryParse(json['periodEnd'].toString()),
       fileUrl: json['fileUrl'] as String?,
+      contentType: json['contentType'] as String?,
     );
   }
 }

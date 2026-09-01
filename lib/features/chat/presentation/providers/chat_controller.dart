@@ -380,6 +380,8 @@ class ChatController extends StateNotifier<ChatState> {
           fileName: uploaded.filename,
           extension: attachment.extension,
           sizeBytes: uploaded.size,
+          fileUrl: uploaded.fileUrl,
+          contentType: uploaded.contentType,
         );
         // The document is now on the server regardless of whether the
         // chat request below succeeds — record it in the same local
@@ -393,6 +395,7 @@ class ChatController extends StateNotifier<ChatState> {
               fileName: uploaded.filename,
               uploadedAt: DateTime.now(),
               fileUrl: uploaded.fileUrl,
+              contentType: uploaded.contentType,
             ),
           ),
         );

@@ -213,6 +213,66 @@ void main() {
         throwsA(isA<ChatConversationNotFoundException>()),
       );
     });
+
+    test('a message whose content is a file-attachment content-parts list '
+        'restores its text and a tappable fileAttachment, not a mangled '
+        'string', () async {
+      _mockSecureStorage(binding, {'access_token': 'token-123'});
+      final client = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'conversation': {
+              'id': 1,
+              'title': 'Statement review',
+              'created_at': '2026-01-01T10:00:00Z',
+              'updated_at': '2026-01-01T10:00:00Z',
+            },
+            'messages': [
+              {
+                'id': 1,
+                'conversation_id': 1,
+                'role': 'user',
+                'content': [
+                  {'type': 'input_text', 'text': 'Summarize this statement.'},
+                  {
+                    'type': 'input_file',
+                    'file_url': 'https://pub-test.r2.dev/statement/4/uuid.pdf',
+                  },
+                ],
+                'created_at': '2026-01-01T10:00:00Z',
+              },
+              {
+                'id': 2,
+                'conversation_id': 1,
+                'role': 'assistant',
+                'content': 'Here is a summary...',
+                'created_at': '2026-01-01T10:00:05Z',
+              },
+            ],
+          }),
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
+      });
+
+      final detail = await _repo(client).getConversation('1');
+
+      final userMessage = detail.messages[0];
+      expect(userMessage.text, 'Summarize this statement.');
+      expect(userMessage.fileAttachment, isNotNull);
+      expect(
+        userMessage.fileAttachment!.fileUrl,
+        'https://pub-test.r2.dev/statement/4/uuid.pdf',
+      );
+      // The extension is preserved even though the original filename
+      // wasn't stored — enough for the document viewer to work and to
+      // show something more honest than a raw UUID.
+      expect(userMessage.fileAttachment!.fileName, endsWith('.pdf'));
+
+      // The plain-text assistant reply right after it is unaffected.
+      expect(detail.messages[1].text, 'Here is a summary...');
+      expect(detail.messages[1].fileAttachment, isNull);
+    });
   });
 
   group('deleteConversation', () {

@@ -128,9 +128,11 @@ class ChatMessage {
   }
 
   /// Local persistence only (`LocalConversationStore`) — deliberately drops
-  /// [categoryBreakdown]/[recurringPayments]/[fileAttachment], which are
-  /// mock-data-only rich cards today. Restored history falls back to the
-  /// plain [text], which still carries the meaningful content.
+  /// [categoryBreakdown]/[recurringPayments], which are mock-data-only rich
+  /// cards today. [fileAttachment] *is* kept (just its [UploadedFileAttachment]
+  /// `fileName`/`fileUrl`/`contentType`, not the derived size/extension
+  /// labels) so a conversation restored from the offline cache still shows
+  /// a tappable document reference, not just its plain [text].
   Map<String, dynamic> toJson() => {
     'id': id,
     'role': role.name,
@@ -142,9 +144,17 @@ class ChatMessage {
     'helpful': helpful,
     'notHelpfulReason': notHelpfulReason,
     'usedFinancialData': usedFinancialData,
+    'fileAttachment': fileAttachment == null
+        ? null
+        : {
+            'fileName': fileAttachment!.fileName,
+            'fileUrl': fileAttachment!.fileUrl,
+            'contentType': fileAttachment!.contentType,
+          },
   };
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    final rawAttachment = json['fileAttachment'];
     return ChatMessage(
       id: json['id'] as String,
       role: json['role'] == 'user'
@@ -166,6 +176,14 @@ class ChatMessage {
       helpful: json['helpful'] as bool?,
       notHelpfulReason: json['notHelpfulReason'] as String?,
       usedFinancialData: json['usedFinancialData'] as bool?,
+      fileAttachment: rawAttachment is Map
+          ? UploadedFileAttachment(
+              fileName:
+                  (rawAttachment['fileName'] as String?) ?? 'Attached document',
+              fileUrl: rawAttachment['fileUrl'] as String?,
+              contentType: rawAttachment['contentType'] as String?,
+            )
+          : null,
     );
   }
 }

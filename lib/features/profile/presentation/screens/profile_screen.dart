@@ -14,8 +14,8 @@ import '../providers/profile_finance_controller.dart';
 import '../widgets/profile_header_card.dart';
 import '../widgets/profile_section.dart';
 import '../widgets/unavailable_feature_screen.dart';
+import 'documents_screen.dart';
 import 'financial_data_screen.dart';
-import 'statements_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -96,15 +96,15 @@ class ProfileScreen extends ConsumerWidget {
                 ProfileMenuRow(
                   icon: Icons.description_outlined,
                   iconColor: AppColors.categoryBills,
-                  title: 'Uploaded statements',
-                  subtitle: 'View and manage your uploaded bank statements',
+                  title: 'Documents',
+                  subtitle: 'View and manage your uploaded financial documents',
                   trailing: financeState.statements.isEmpty
                       ? null
                       : ProfileCountBadge(
                           count: financeState.statements.length,
                         ),
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const StatementsScreen()),
+                    MaterialPageRoute(builder: (_) => const DocumentsScreen()),
                   ),
                 ),
                 ProfileMenuRow(

@@ -213,17 +213,69 @@ class ApiChatRepository implements ChatRepository {
     Map<String, dynamic> json,
     String conversationId,
   ) {
+    final parsed = _parseContent(json['content']);
     return ChatMessage(
       id: 'msg-${json['id']}',
       role: json['role'] == 'user'
           ? ChatMessageRole.user
           : ChatMessageRole.assistant,
-      text: (json['content'] ?? '').toString(),
+      text: parsed.text,
       timestamp:
           DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
       conversationId: conversationId,
+      fileAttachment: parsed.fileAttachment,
     );
+  }
+
+  /// A message's `content` is either a plain string, or — for a turn that
+  /// had a file attached — a JSON array of OpenAI-style content parts
+  /// (`[{"type": "input_text", "text": ...}, {"type": "input_file",
+  /// "file_url": ...}]`, see `chat_routes.py`'s `_serialize_content`).
+  /// Reconstructs both the display text and a tappable
+  /// [UploadedFileAttachment] from either shape, so reopening a
+  /// conversation never loses or mangles a past file reference.
+  ({String text, UploadedFileAttachment? fileAttachment}) _parseContent(
+    Object? content,
+  ) {
+    if (content is! List) {
+      return (text: (content ?? '').toString(), fileAttachment: null);
+    }
+
+    String text = '';
+    String? fileUrl;
+    for (final part in content) {
+      if (part is! Map) continue;
+      switch (part['type']) {
+        case 'input_text':
+          text = (part['text'] ?? '').toString();
+        case 'input_file':
+          final url = part['file_url'];
+          if (url != null) fileUrl = url.toString();
+      }
+    }
+
+    if (fileUrl == null) return (text: text, fileAttachment: null);
+    return (
+      text: text,
+      fileAttachment: UploadedFileAttachment(
+        fileName: _filenameFromUrl(fileUrl),
+        fileUrl: fileUrl,
+      ),
+    );
+  }
+
+  /// The backend only stores the R2 `file_url` on a restored historical
+  /// message, not the original filename — this derives a clean, honest
+  /// display name from the URL's last path segment (its extension, at
+  /// least, is always the real one) rather than showing a raw R2 key/UUID.
+  String _filenameFromUrl(String url) {
+    final path = Uri.tryParse(url)?.path ?? url;
+    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+    final last = segments.isEmpty ? '' : segments.last;
+    final dot = last.lastIndexOf('.');
+    final extension = dot == -1 ? '' : last.substring(dot);
+    return 'Attached document$extension';
   }
 
   @override

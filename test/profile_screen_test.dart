@@ -5,6 +5,7 @@ import 'package:finassist/features/chat/data/repositories/mock_chat_repository.d
 import 'package:finassist/features/chat/presentation/providers/chat_controller.dart';
 import 'package:finassist/features/dashboard/data/repositories/mock_financial_repository.dart';
 import 'package:finassist/features/dashboard/presentation/widgets/app_bottom_nav_bar.dart';
+import 'package:finassist/shared/widgets/document_viewer_screen.dart';
 
 import 'support/pump_app.dart';
 
@@ -101,6 +102,60 @@ void main() {
 
     expect(find.text('Appearance'), findsNothing);
   });
+
+  testWidgets(
+    'Documents: tapping an uploaded document opens it inside FinAssist, '
+    'never a browser, and back returns to Documents',
+    (tester) async {
+      await pumpApp(
+        tester,
+        overrides: [
+          statementFilePickerServiceProvider.overrideWithValue(
+            FakeStatementFilePickerService(),
+          ),
+          chatRepositoryProvider.overrideWithValue(
+            MockChatRepository(MockFinancialRepository()),
+          ),
+          fileUploadRepositoryProvider.overrideWithValue(
+            FakeFileUploadRepository(),
+          ),
+        ],
+      );
+      await loginWithDemoAccount(tester);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Profile'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Documents'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No documents yet'), findsOneWidget);
+
+      await tester.tap(find.text('Upload a document'));
+      await pumpUntil(tester, find.text('GTBank_Statement.pdf'));
+      expect(find.text('No documents yet'), findsNothing);
+
+      await tester.tap(find.text('GTBank_Statement.pdf'));
+      await tester.pumpAndSettle();
+
+      // The shared in-app viewer opened — never a browser — and shows
+      // this exact document.
+      expect(find.byType(DocumentViewerScreen), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('GTBank_Statement.pdf'),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DocumentViewerScreen), findsNothing);
+      expect(find.text('GTBank_Statement.pdf'), findsOneWidget);
+    },
+  );
 
   testWidgets('logging out clears the session and returns to Login', (
     tester,

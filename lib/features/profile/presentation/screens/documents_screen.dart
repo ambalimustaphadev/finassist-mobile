@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/extensions/formatting_extensions.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/document_viewer_screen.dart';
 import '../../../../shared/widgets/icon_badge.dart';
 import '../../data/models/uploaded_statement.dart';
 import '../providers/profile_finance_controller.dart';
 
-/// Lists the bank statements this device has actually uploaded and had
-/// analyzed, and lets the user upload another one — reusing the same
-/// file-picker and analysis pipeline the chat feature already uses.
-class StatementsScreen extends ConsumerWidget {
-  const StatementsScreen({super.key});
+/// Lists every financial document this device has uploaded — bank
+/// statements today, with investment/loan/insurance documents and other
+/// financial reports the same underlying shape once FinAssist supports
+/// them — and lets the user upload another one. Reuses the same
+/// file-picker and upload pipeline Chat's composer attachment flow
+/// already uses (see `fileUploadRepositoryProvider`), so a document
+/// uploaded from either place shows up here.
+class DocumentsScreen extends ConsumerWidget {
+  const DocumentsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +32,7 @@ class StatementsScreen extends ConsumerWidget {
         case StatementUploadStatus.success:
           _showSnack(
             context,
-            next.uploadMessage ?? 'Statement uploaded.',
+            next.uploadMessage ?? 'Document uploaded.',
             isError: false,
           );
           notifier.dismissUploadStatus();
@@ -36,7 +40,7 @@ class StatementsScreen extends ConsumerWidget {
         case StatementUploadStatus.unavailable:
           _showSnack(
             context,
-            next.uploadMessage ?? "Couldn't upload that statement.",
+            next.uploadMessage ?? "Couldn't upload that document.",
             isError: true,
           );
           notifier.dismissUploadStatus();
@@ -53,7 +57,7 @@ class StatementsScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text('Uploaded statements', style: AppTypography.screenTitle),
+        title: Text('Documents', style: AppTypography.screenTitle),
       ),
       body: SafeArea(
         child: Column(
@@ -67,14 +71,14 @@ class StatementsScreen extends ConsumerWidget {
                       ),
                     )
                   : state.statements.isEmpty
-                  ? const _EmptyStatements()
+                  ? const _EmptyDocuments()
                   : ListView.separated(
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       itemCount: state.statements.length,
                       separatorBuilder: (_, _) =>
                           const SizedBox(height: AppSpacing.sm),
                       itemBuilder: (context, index) =>
-                          _StatementTile(statement: state.statements[index]),
+                          _DocumentTile(document: state.statements[index]),
                     ),
             ),
             Padding(
@@ -106,7 +110,7 @@ class StatementsScreen extends ConsumerWidget {
                               ),
                             )
                           : const Text(
-                              'Upload a statement',
+                              'Upload a document',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.black87,
@@ -158,8 +162,8 @@ class StatementsScreen extends ConsumerWidget {
   }
 }
 
-class _EmptyStatements extends StatelessWidget {
-  const _EmptyStatements();
+class _EmptyDocuments extends StatelessWidget {
+  const _EmptyDocuments();
 
   @override
   Widget build(BuildContext context) {
@@ -176,10 +180,11 @@ class _EmptyStatements extends StatelessWidget {
               iconSize: 26,
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text('No statements yet', style: AppTypography.sectionHeading),
+            Text('No documents yet', style: AppTypography.sectionHeading),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Upload a bank statement to start building your financial picture.',
+              'Upload a bank statement or other financial document to '
+              'start building your financial picture.',
               textAlign: TextAlign.center,
               style: AppTypography.body,
             ),
@@ -190,57 +195,24 @@ class _EmptyStatements extends StatelessWidget {
   }
 }
 
-class _StatementTile extends StatelessWidget {
-  const _StatementTile({required this.statement});
+class _DocumentTile extends StatelessWidget {
+  const _DocumentTile({required this.document});
 
-  final UploadedStatement statement;
-
-  Future<void> _open(BuildContext context) async {
-    final url = statement.fileUrl;
-    if (url == null) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.surfaceElevated,
-            content: Text(
-              "This statement doesn't have a document to open.",
-              style: TextStyle(color: AppColors.textPrimary),
-            ),
-          ),
-        );
-      return;
-    }
-
-    final uri = Uri.tryParse(url);
-    final opened =
-        uri != null &&
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.surfaceElevated,
-            content: Text(
-              "Couldn't open this document.",
-              style: TextStyle(color: AppColors.textPrimary),
-            ),
-          ),
-        );
-    }
-  }
+  final UploadedStatement document;
 
   @override
   Widget build(BuildContext context) {
     final hasPeriod =
-        statement.periodStart != null && statement.periodEnd != null;
+        document.periodStart != null && document.periodEnd != null;
     return AppCard(
       color: AppColors.surfaceElevated,
       padding: const EdgeInsets.all(AppSpacing.md),
-      onTap: () => _open(context),
+      onTap: () => openDocumentViewer(
+        context,
+        fileUrl: document.fileUrl,
+        filename: document.fileName,
+        contentType: document.contentType,
+      ),
       child: Row(
         children: [
           const IconBadge(
@@ -253,7 +225,7 @@ class _StatementTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  statement.fileName,
+                  document.fileName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyMedium,
@@ -262,10 +234,10 @@ class _StatementTile extends StatelessWidget {
                 Text(
                   hasPeriod
                       ? formatDateRange(
-                          statement.periodStart!,
-                          statement.periodEnd!,
+                          document.periodStart!,
+                          document.periodEnd!,
                         )
-                      : 'Uploaded ${statement.uploadedAt.toMonthDayYear()}',
+                      : 'Uploaded ${document.uploadedAt.toMonthDayYear()}',
                   style: AppTypography.caption,
                 ),
               ],

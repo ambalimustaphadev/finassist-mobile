@@ -145,6 +145,7 @@ class ProfileFinanceController extends StateNotifier<ProfileFinanceState> {
         fileName: uploaded.filename,
         uploadedAt: DateTime.now(),
         fileUrl: uploaded.fileUrl,
+        contentType: uploaded.contentType,
       );
       await _store.addStatement(_userId, record);
       state = state.copyWith(
