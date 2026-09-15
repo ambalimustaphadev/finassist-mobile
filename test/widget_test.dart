@@ -1,49 +1,44 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'package:finassist/features/chat/data/repositories/mock_chat_repository.dart';
+import 'package:finassist/features/chat/presentation/providers/chat_controller.dart';
 
 import 'support/pump_app.dart';
 
 void main() {
-  testWidgets('Login then dashboard loads with greeting and chat CTA', (
-    tester,
-  ) async {
-    await pumpApp(tester);
-
+  Future<void> pumpAndLogin(WidgetTester tester) async {
+    await pumpApp(
+      tester,
+      overrides: [
+        chatRepositoryProvider.overrideWithValue(MockChatRepository()),
+      ],
+    );
     expect(find.text('Welcome back'), findsOneWidget);
     await loginWithDemoAccount(tester);
     await tester.pumpAndSettle();
+  }
+
+  testWidgets('Login lands directly on Chat — no dashboard step in between', (
+    tester,
+  ) async {
+    await pumpAndLogin(tester);
+    await pumpUntil(tester, find.text('What would you like to know today?'));
 
     // The greeting is time-of-day dependent, so match any of the three.
     expect(
       find.textContaining(RegExp(r'Good (morning|afternoon|evening)')),
       findsOneWidget,
     );
-
-    final chatCta = find.text('Chat with AI Assistant');
-    await tester.dragUntilVisible(
-      chatCta,
-      find.byKey(const Key('dashboardScrollView')),
-      const Offset(0, -300),
-    );
-    expect(chatCta, findsOneWidget);
+    expect(find.text('What would you like to know today?'), findsOneWidget);
   });
 
-  testWidgets('Tapping the chat CTA navigates to the AI chat screen', (
+  testWidgets('Chat is reachable immediately — no CTA tap needed', (
     tester,
   ) async {
-    await pumpApp(tester);
-    await loginWithDemoAccount(tester);
-    await tester.pumpAndSettle();
+    await pumpAndLogin(tester);
+    await pumpUntil(tester, find.text('Ask FinAssist anything...'));
 
-    final chatCta = find.text('Chat with AI Assistant');
-    await tester.dragUntilVisible(
-      chatCta,
-      find.byKey(const Key('dashboardScrollView')),
-      const Offset(0, -300),
-    );
-    await tester.tap(chatCta);
-    await tester.pumpAndSettle();
-
-    expect(find.text('FinAssist AI'), findsOneWidget);
+    expect(find.text('FinAssist'), findsWidgets);
+    expect(find.text('Ask FinAssist anything...'), findsOneWidget);
   });
 }

@@ -7,13 +7,15 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../providers/auth_controller.dart';
 import '../utils/auth_validators.dart';
+import '../widgets/auth_checkbox.dart';
 import '../widgets/auth_divider.dart';
 import '../widgets/auth_error_banner.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_password_field.dart';
 import '../widgets/auth_primary_button.dart';
+import '../widgets/auth_scaffold.dart';
 import '../widgets/auth_text_field.dart';
-import '../widgets/google_sign_in_button.dart';
+import '../widgets/social_auth_buttons.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -26,6 +28,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _rememberMe = true;
 
   @override
   void dispose() {
@@ -44,9 +47,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-    // On success, AuthGate reactively swaps to the dashboard — no
-    // navigation call needed here. On failure, authState.loginError
-    // renders inline below.
   }
 
   void _handleForgotPassword() {
@@ -75,119 +75,132 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.authSurface,
-      // Top safe area is handled by AuthHeader itself (so its dark
-      // background can paint full-bleed behind the status bar); the
-      // bottom (home indicator) inset is handled here.
-      //
-      // The header sits outside the scroll view on purpose: only the form
-      // scrolls to stay reachable above the keyboard, while the heading
-      // stays put instead of jumping around as the user types.
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            const AuthHeader(
-              title: 'Welcome back',
-              subtitle:
-                  'Sign in to continue your financial journey with FinAssist.',
-              illustrationIcon: Icons.show_chart_rounded,
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.xl,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AuthTextField(
-                        label: 'Email',
-                        hintText: 'Enter email address',
-                        icon: Icons.mail_outline_rounded,
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        autofillHints: const [AutofillHints.email],
-                        validator: AuthValidators.email,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      AuthPasswordField(
-                        key: const ValueKey('login-password-field'),
-                        label: 'Password',
-                        hintText: 'Enter password',
-                        controller: _passwordController,
-                        textInputAction: TextInputAction.done,
-                        autofillHints: const [AutofillHints.password],
-                        validator: (value) => AuthValidators.password(value),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _handleForgotPassword,
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                          ),
-                          child: Text(
-                            'Forgot password?',
-                            style: AppTypography.caption.copyWith(
-                              color: AppColors.accentDeep,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (authState.loginError != null) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        AuthErrorBanner(message: authState.loginError!),
-                      ],
-                      const SizedBox(height: AppSpacing.lg),
-                      AuthPrimaryButton(
-                        label: 'Login',
-                        isLoading: authState.loginLoading,
-                        onPressed: _handleLogin,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      const AuthDivider(),
-                      const SizedBox(height: AppSpacing.lg),
-                      const GoogleSignInButton(),
-                      const SizedBox(height: AppSpacing.xl),
-                      Center(
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          children: [
-                            Text(
-                              "Don't have an account? ",
-                              style: AppTypography.body,
-                            ),
-                            GestureDetector(
-                              onTap: _handleGoToRegister,
-                              child: Text(
-                                'Register',
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.accentDeep,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+    return AuthScaffold(
+      builder: (context) {
+        return Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Image.asset(
+                  'assets/splash/splash_logo.png',
+                  height: 56,
+                  errorBuilder: (_, _, _) => const SizedBox(height: 56),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
+              const SizedBox(height: AppSpacing.xxl),
+              const AuthHeader(
+                title: 'Welcome back',
+                subtitle:
+                    'Sign in to continue your financial journey with FinAssist.',
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              AuthTextField(
+                label: 'Email address',
+                hintText: 'you@example.com',
+                icon: Icons.mail_outline_rounded,
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                validator: AuthValidators.email,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              AuthPasswordField(
+                key: const ValueKey('login-password-field'),
+                label: 'Password',
+                hintText: 'Enter your password',
+                controller: _passwordController,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                validator: (value) => AuthValidators.password(value),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: Semantics(
+                      label: 'Remember me',
+                      child: InkWell(
+                        onTap: () => setState(() => _rememberMe = !_rememberMe),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.xs,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AuthCheckbox(value: _rememberMe),
+                              const SizedBox(width: AppSpacing.sm),
+                              Flexible(
+                                child: Text(
+                                  'Remember me',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.caption.copyWith(
+                                    color: AppColors.authTextPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                    ),
+                    onPressed: _handleForgotPassword,
+                    child: Text(
+                      'Forgot password?',
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.accentDeep,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (authState.loginError != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                AuthErrorBanner(message: authState.loginError!),
+              ],
+              const SizedBox(height: AppSpacing.lg),
+              AuthPrimaryButton(
+                label: 'Login',
+                isLoading: authState.loginLoading,
+                onPressed: _handleLogin,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              const AuthDivider(label: 'Or continue with'),
+              const SizedBox(height: AppSpacing.xl),
+              const SocialAuthButtons(),
+              const SizedBox(height: AppSpacing.xxl),
+              Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  children: [
+                    Text("Don't have an account? ", style: AppTypography.body),
+                    GestureDetector(
+                      onTap: _handleGoToRegister,
+                      child: Text(
+                        'Register',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.accentDeep,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

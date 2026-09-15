@@ -1,28 +1,43 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart'
-    show openAppSettings;
 
 import '../../../../app/router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../shared/widgets/coming_soon_snack_bar.dart';
+import '../../../../core/dev/dev_reset.dart';
 import '../../../../shared/widgets/confirm_action_dialog.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
-import '../providers/profile_finance_controller.dart';
+import '../../../notifications/presentation/providers/notifications_controller.dart';
+import '../../../notifications/presentation/screens/notifications_screen.dart';
+import '../../data/models/preferences.dart';
+import '../providers/preferences_controller.dart';
 import '../widgets/profile_header_card.dart';
 import '../widgets/profile_section.dart';
-import '../widgets/unavailable_feature_screen.dart';
-import 'documents_screen.dart';
-import 'financial_data_screen.dart';
+import 'about_finassist_screen.dart';
+import 'change_password_screen.dart';
+import 'contact_support_screen.dart';
+import 'data_ai_controls_screen.dart';
+import 'help_faq_screen.dart';
+import 'language_currency_screen.dart';
+import 'manage_app_permissions_screen.dart';
+import 'notification_preferences_screen.dart';
+import 'personal_information_screen.dart';
+import 'privacy_screen.dart';
+import 'security_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final financeState = ref.watch(profileFinanceControllerProvider);
+    final preferencesState = ref.watch(preferencesControllerProvider);
+    final languageLabel = languageOptionFor(preferencesState.language).label;
+    final currencyOption = currencyOptionFor(preferencesState.currency);
+    final hasUnreadNotifications = ref.watch(
+      notificationsControllerProvider.select((s) => s.hasUnread),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -30,6 +45,38 @@ class ProfileScreen extends ConsumerWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         title: Text('Profile', style: AppTypography.screenTitle),
+        actions: [
+          Semantics(
+            button: true,
+            label: 'Notifications',
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_none_rounded),
+                  color: AppColors.textPrimary,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen(),
+                    ),
+                  ),
+                ),
+                if (hasUnreadNotifications)
+                  const Positioned(
+                    top: 10,
+                    right: 10,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.accent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: SizedBox(width: 8, height: 8),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: ListView(
@@ -50,15 +97,11 @@ class ProfileScreen extends ConsumerWidget {
                   icon: Icons.person_outline_rounded,
                   iconColor: AppColors.categoryBills,
                   title: 'Personal information',
-                  subtitle: 'Update your name, email and more',
-                  onTap: () => _openUnavailable(
-                    context,
-                    title: 'Personal information',
-                    icon: Icons.person_outline_rounded,
-                    message:
-                        "Editing your name, email and other details isn't available yet. "
-                        'This will let you update your personal information once '
-                        'FinAssist adds support for it.',
+                  subtitle: 'Update your name, username and email',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const PersonalInformationScreen(),
+                    ),
                   ),
                 ),
                 ProfileMenuRow(
@@ -66,12 +109,10 @@ class ProfileScreen extends ConsumerWidget {
                   iconColor: AppColors.accentStrong,
                   title: 'Change password',
                   subtitle: 'Update your password',
-                  onTap: () => _openUnavailable(
-                    context,
-                    title: 'Change password',
-                    icon: Icons.lock_outline_rounded,
-                    message:
-                        "Changing your password from the app isn't available yet.",
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ChangePasswordScreen(),
+                    ),
                   ),
                 ),
                 ProfileMenuRow(
@@ -79,52 +120,9 @@ class ProfileScreen extends ConsumerWidget {
                   iconColor: AppColors.categoryTransfers,
                   title: 'Security',
                   subtitle: 'Manage your account security',
-                  onTap: () => _openUnavailable(
-                    context,
-                    title: 'Security',
-                    icon: Icons.shield_outlined,
-                    message: "Account security settings aren't available yet.",
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-
-            const ProfileSectionLabel(label: 'Your Finances'),
-            ProfileSectionCard(
-              children: [
-                ProfileMenuRow(
-                  icon: Icons.description_outlined,
-                  iconColor: AppColors.categoryBills,
-                  title: 'Documents',
-                  subtitle: 'View and manage your uploaded financial documents',
-                  trailing: financeState.statements.isEmpty
-                      ? null
-                      : ProfileCountBadge(
-                          count: financeState.statements.length,
-                        ),
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                    MaterialPageRoute(builder: (_) => const SecurityScreen()),
                   ),
-                ),
-                ProfileMenuRow(
-                  icon: Icons.pie_chart_outline_rounded,
-                  iconColor: AppColors.accentStrong,
-                  title: 'Financial data',
-                  subtitle: 'View your extracted financial data',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const FinancialDataScreen(),
-                    ),
-                  ),
-                ),
-                ProfileMenuRow(
-                  icon: Icons.delete_outline_rounded,
-                  iconColor: AppColors.negative,
-                  title: 'Delete financial data',
-                  subtitle: 'Delete all your financial data from FinAssist',
-                  isDestructive: true,
-                  onTap: () => _handleDeleteFinancialData(context, ref),
                 ),
               ],
             ),
@@ -138,51 +136,62 @@ class ProfileScreen extends ConsumerWidget {
                   iconColor: AppColors.categoryShopping,
                   title: 'Notifications',
                   subtitle: 'Manage your notification preferences',
-                  onTap: () => showComingSoonSnackBar(context, 'Notifications'),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationPreferencesScreen(),
+                    ),
+                  ),
                 ),
                 ProfileMenuRow(
                   icon: Icons.language_rounded,
                   iconColor: AppColors.categoryBills,
-                  title: 'Language',
-                  subtitle: 'Choose your preferred language',
-                  onTap: () => showComingSoonSnackBar(context, 'Language'),
-                ),
-                ProfileMenuRow(
-                  icon: Icons.payments_outlined,
-                  iconColor: AppColors.accentStrong,
-                  title: 'Currency',
-                  subtitle: 'Choose your preferred currency',
-                  onTap: () => showComingSoonSnackBar(context, 'Currency'),
+                  title: 'Language & currency',
+                  subtitle:
+                      '$languageLabel · ${currencyOption.symbol} '
+                      '${currencyOption.code}',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const LanguageCurrencyScreen(),
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.xxl),
 
-            const ProfileSectionLabel(label: 'Privacy & Security'),
+            const ProfileSectionLabel(label: 'Privacy & data'),
             ProfileSectionCard(
               children: [
                 ProfileMenuRow(
                   icon: Icons.privacy_tip_outlined,
                   iconColor: AppColors.categoryBills,
                   title: 'Privacy',
-                  subtitle: 'Manage your privacy settings',
-                  onTap: () =>
-                      showComingSoonSnackBar(context, 'Privacy settings'),
+                  subtitle: 'What FinAssist knows and why',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+                  ),
                 ),
                 ProfileMenuRow(
-                  icon: Icons.shield_outlined,
+                  icon: Icons.tune_rounded,
                   iconColor: AppColors.accentStrong,
                   title: 'Data & AI controls',
-                  subtitle: 'Manage how your data is used by FinAssist',
-                  onTap: () =>
-                      showComingSoonSnackBar(context, 'Data & AI controls'),
+                  subtitle: 'Control how your information is used',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const DataAiControlsScreen(),
+                    ),
+                  ),
                 ),
                 ProfileMenuRow(
                   icon: Icons.vpn_key_outlined,
                   iconColor: AppColors.categoryTransfers,
                   title: 'Manage app permissions',
-                  subtitle: 'Manage FinAssist app permissions',
-                  onTap: openAppSettings,
+                  subtitle: 'Camera and notification access',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ManageAppPermissionsScreen(),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -196,26 +205,60 @@ class ProfileScreen extends ConsumerWidget {
                   iconColor: AppColors.categoryBills,
                   title: 'Help & FAQ',
                   subtitle: 'Get help and find answers',
-                  onTap: () => showComingSoonSnackBar(context, 'Help & FAQ'),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const HelpFaqScreen()),
+                  ),
                 ),
                 ProfileMenuRow(
                   icon: Icons.chat_bubble_outline_rounded,
                   iconColor: AppColors.accentStrong,
                   title: 'Contact support',
                   subtitle: 'Reach out to our support team',
-                  onTap: () =>
-                      showComingSoonSnackBar(context, 'Contact support'),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ContactSupportScreen(),
+                    ),
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+
+            const ProfileSectionLabel(label: 'About'),
+            ProfileSectionCard(
+              children: [
                 ProfileMenuRow(
                   icon: Icons.info_outline_rounded,
                   iconColor: AppColors.categoryTransfers,
                   title: 'About FinAssist',
                   subtitle: 'Version 1.0.0',
-                  onTap: () => _showAbout(context),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AboutFinAssistScreen(),
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.xxl),
+
+            if (kDebugMode) ...[
+              const ProfileSectionLabel(label: 'Development'),
+              ProfileSectionCard(
+                children: [
+                  ProfileMenuRow(
+                    icon: Icons.restart_alt_rounded,
+                    iconColor: AppColors.negative,
+                    title: 'Reset app state',
+                    subtitle:
+                        'Clear local session & onboarding state for testing',
+                    isDestructive: true,
+                    onTap: () => _handleDevReset(context, ref),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+            ],
 
             const _LogoutButton(),
           ],
@@ -224,83 +267,33 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _openUnavailable(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required String message,
-  }) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => UnavailableFeatureScreen(
-          title: title,
-          icon: icon,
-          message: message,
-        ),
-      ),
-    );
-  }
-
-  void _showAbout(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceElevated,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        title: Text('About FinAssist', style: AppTypography.sectionHeading),
-        content: Text(
-          'Version 1.0.0\n\nYour financial assistant.',
-          style: AppTypography.body,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Close',
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.accent),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _handleDeleteFinancialData(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  /// Debug-only (see the `kDebugMode` guard around this row): resets local
+  /// auth/onboarding state so the existing AuthGate/routing logic resolves
+  /// back to the first-launch flow (Onboarding -> Register, since this
+  /// device now looks like it's never signed in) — never touches the
+  /// backend or clears anything beyond what a real logout already clears
+  /// locally, plus the onboarding-seen and initial-setup flags.
+  Future<void> _handleDevReset(BuildContext context, WidgetRef ref) async {
     final confirmed = await showConfirmActionDialog(
       context,
-      title: 'Delete financial data?',
+      title: 'Reset app state?',
       message:
-          'All financial data extracted from your uploaded statements will be '
-          "permanently removed from FinAssist. This won't delete your bank account.",
-      confirmLabel: 'Delete data',
+          'This clears local FinAssist testing state (session and '
+          'onboarding) and returns the app to the first-launch experience. '
+          'Your account and data on the server are untouched.',
+      confirmLabel: 'Reset',
       isDestructive: true,
     );
     if (!confirmed) return;
 
-    final success = await ref
-        .read(profileFinanceControllerProvider.notifier)
-        .deleteFinancialData();
+    await resetAppStateForDevelopment(ref);
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surfaceElevated,
-          content: Text(
-            success
-                ? 'Your financial data has been deleted.'
-                : "Couldn't delete your financial data. Please try again.",
-            style: const TextStyle(color: AppColors.textPrimary),
-          ),
-        ),
-      );
+    // Same full-stack-clearing navigation as a real logout — a back
+    // gesture must never reveal a protected screen after the reset either.
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AppRoutes.authGate, (route) => false);
   }
 }
 
@@ -343,8 +336,8 @@ class _LogoutButton extends ConsumerWidget {
   Future<void> _handleLogout(BuildContext context, WidgetRef ref) async {
     final confirmed = await showConfirmActionDialog(
       context,
-      title: 'Log out?',
-      message: 'Are you sure you want to log out of FinAssist?',
+      title: 'Log out of FinAssist?',
+      message: 'You can sign back in anytime.',
       confirmLabel: 'Log out',
       isDestructive: true,
     );
@@ -353,7 +346,7 @@ class _LogoutButton extends ConsumerWidget {
     await ref.read(authControllerProvider.notifier).logout();
     if (!context.mounted) return;
 
-    // Clears the whole stack (Dashboard, Profile, any pushed screens) so a
+    // Clears the whole stack (Chat, Profile, any pushed screens) so a
     // back gesture can never reveal a protected screen after logging out.
     Navigator.of(
       context,

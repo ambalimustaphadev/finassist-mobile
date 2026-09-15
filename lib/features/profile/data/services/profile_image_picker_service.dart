@@ -160,14 +160,13 @@ class DeviceProfileImagePickerService implements ProfileImagePickerService {
   /// the same way `FilePickerStatementService` already picks statements
   /// without requesting any runtime permission.
   Future<ProfileImagePickResult> _pickFromFileSystem(String userId) async {
-    final FilePickerResult? result;
+    final PlatformFile? file;
     try {
-      result = await FilePicker.platform.pickFiles(type: FileType.image);
+      file = await FilePicker.pickFile(type: FileType.image);
     } catch (_) {
       return const ProfileImagePickResult.invalidImage();
     }
-    final files = result?.files ?? const [];
-    final path = files.isEmpty ? null : files.first.path;
+    final path = file?.path;
     if (path == null) return const ProfileImagePickResult.cancelled();
     return _persist(path, userId);
   }

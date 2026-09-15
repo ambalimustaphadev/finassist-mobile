@@ -1,7 +1,5 @@
-import '../../../../shared/models/uploaded_file_attachment.dart';
 import '../models/chat_stream_chunk.dart';
 import '../models/conversation.dart';
-import '../models/statement_analysis_result.dart';
 
 /// Thrown when a request needs an access token that's missing, or the
 /// backend reports the current one has expired — lets callers distinguish
@@ -45,20 +43,16 @@ abstract class ChatRepository {
   /// [conversationId]. See [ChatStreamChunk] for how implementations are
   /// expected to emit chunks.
   ///
-  /// [fileUrl] is the R2-accessible URL of a file the user attached to
-  /// this turn (from [FileUploadRepository.uploadFile], already uploaded
-  /// by the time this is called) — passed straight through to the
-  /// backend so the model can read the document alongside the message.
+  /// [fileId] is the backend id of a file the user attached to this turn
+  /// (from [FileUploadRepository.uploadFile], already uploaded by the time
+  /// this is called) — passed straight through to the backend so the
+  /// model can read the document alongside the message. The file itself
+  /// is private in R2; Flutter never sees or sends a URL for it.
   Stream<ChatStreamChunk> sendMessage(
     String conversationId,
     String userMessage, {
-    String? fileUrl,
+    int? fileId,
   });
-
-  /// Analyzes an uploaded statement file and returns the assistant's
-  /// summary plus the period it covers. A separate feature from the
-  /// conversation/message endpoints above.
-  Future<StatementAnalysisResult> analyzeStatement(UploadedFileAttachment file);
 
   /// A short, client-derived label for a conversation, built from its
   /// first meaningful message (e.g. "Budget planning"). Synchronous —

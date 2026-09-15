@@ -5,10 +5,13 @@ enum AuthStatus {
   authenticated,
   unauthenticated,
 
-  /// A stored session exists but couldn't be verified because the backend
-  /// was unreachable — distinct from [unauthenticated] so the UI can offer
-  /// "Try again" instead of silently dropping the user to Login and
-  /// discarding a session that may still be valid.
+  /// A stored session exists, couldn't be verified because the backend was
+  /// unreachable, AND no previously-cached user is available to fall back
+  /// on — a rare edge case (normally an unreachable backend still resolves
+  /// as [authenticated] from the cache; see `ApiAuthRepository`). Distinct
+  /// from [unauthenticated] so the UI can offer "Try again" instead of
+  /// silently dropping the user to Login and discarding a session that may
+  /// still be valid.
   unavailable,
 }
 

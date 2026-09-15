@@ -1,29 +1,12 @@
-import '../../../../shared/models/category_breakdown.dart';
 import '../../../../shared/models/uploaded_file_attachment.dart';
-import 'recurring_payment.dart';
 
 enum ChatMessageRole { user, assistant }
 
-/// Determines which widget renders the message body inside a [ChatBubble].
-enum ChatMessageType {
-  text,
-  categoryBreakdown,
-  recurringPayments,
-
-  /// A file the user attached to the conversation (e.g. a bank statement).
-  fileAttachment,
-
-  /// An assistant message that ends with an "Upload Statement" affordance
-  /// because it needs transaction data it doesn't have yet.
-  uploadPrompt,
-
-  /// Statement analysis failed — offers "Try again" / "Choose another file".
-  analysisError,
-}
-
 /// A single message in the AI conversation. The chat UI renders purely
 /// from this model, so it never needs to know whether the data came from
-/// mock responses or a real backend.
+/// mock responses or a real backend. Every AI response is plain chat text
+/// (optionally with a document attachment) — never a fabricated financial
+/// dashboard card.
 class ChatMessage {
   const ChatMessage({
     required this.id,
@@ -31,17 +14,13 @@ class ChatMessage {
     required this.text,
     required this.timestamp,
     this.conversationId,
-    this.messageType = ChatMessageType.text,
-    this.highlights = const [],
-    this.categoryBreakdown,
-    this.recurringPayments,
     this.fileAttachment,
     this.followUpSuggestions = const [],
     this.helpful,
     this.notHelpfulReason,
     this.usedFinancialData,
     this.sendFailed = false,
-    this.pendingFileUrl,
+    this.pendingFileId,
   });
 
   final String id;
@@ -54,30 +33,19 @@ class ChatMessage {
   /// backend's `Conversations -> Messages` endpoints exist.
   final String? conversationId;
 
-  final ChatMessageType messageType;
-
-  /// Substrings of [text] rendered in the accent color.
-  final List<String> highlights;
-
-  /// Populated when [messageType] is [ChatMessageType.categoryBreakdown].
-  final CategoryBreakdown? categoryBreakdown;
-
-  /// Populated when [messageType] is [ChatMessageType.recurringPayments].
-  final List<RecurringPayment>? recurringPayments;
-
-  /// Populated when [messageType] is [ChatMessageType.fileAttachment] or
-  /// [ChatMessageType.analysisError] (the file that failed to analyze).
+  /// A file the user attached to this turn (e.g. a bank statement), if
+  /// any.
   final UploadedFileAttachment? fileAttachment;
 
-  /// The R2 file_url already uploaded for this (user) message, if any —
+  /// The `file_id` already uploaded for this (user) message, if any —
   /// carried only so [ChatController.retrySend] can resend the same chat
   /// request without re-uploading a file that already succeeded. Purely
   /// in-memory bookkeeping, never persisted (see [toJson]) and never
   /// rendered — [fileAttachment] is what the UI shows.
-  final String? pendingFileUrl;
+  final int? pendingFileId;
 
   /// Contextual prompts shown as chips beneath a substantive assistant
-  /// answer, e.g. "Show transactions", "Compare with last month".
+  /// answer, e.g. "Explain this differently", "Tell me more".
   final List<String> followUpSuggestions;
 
   /// User's "was this helpful?" response for this assistant message. Null
@@ -111,10 +79,6 @@ class ChatMessage {
       text: text ?? this.text,
       timestamp: timestamp,
       conversationId: conversationId,
-      messageType: messageType,
-      highlights: highlights,
-      categoryBreakdown: categoryBreakdown,
-      recurringPayments: recurringPayments,
       fileAttachment: fileAttachment,
       followUpSuggestions: followUpSuggestions,
       helpful: clearHelpful ? null : (helpful ?? this.helpful),
@@ -123,23 +87,23 @@ class ChatMessage {
           : (notHelpfulReason ?? this.notHelpfulReason),
       usedFinancialData: usedFinancialData,
       sendFailed: sendFailed ?? this.sendFailed,
-      pendingFileUrl: pendingFileUrl,
+      pendingFileId: pendingFileId,
     );
   }
 
-  /// Local persistence only (`LocalConversationStore`) — deliberately drops
-  /// [categoryBreakdown]/[recurringPayments], which are mock-data-only rich
-  /// cards today. [fileAttachment] *is* kept (just its [UploadedFileAttachment]
-  /// `fileName`/`fileUrl`/`contentType`, not the derived size/extension
-  /// labels) so a conversation restored from the offline cache still shows
-  /// a tappable document reference, not just its plain [text].
+  /// Local persistence only (`LocalConversationStore`). [fileAttachment]
+  /// is kept (just its [UploadedFileAttachment] `fileName`/`fileId`/
+  /// `contentType`, not the derived size/extension labels) so a
+  /// conversation restored from the offline cache still shows a tappable
+  /// document reference, not just its plain [text]. Never caches a URL —
+  /// [fileId] is the only identity persisted; viewing the document later
+  /// always asks the backend for a fresh signed URL.
   Map<String, dynamic> toJson() => {
     'id': id,
     'role': role.name,
     'text': text,
     'timestamp': timestamp.toIso8601String(),
     'conversationId': conversationId,
-    'highlights': highlights,
     'followUpSuggestions': followUpSuggestions,
     'helpful': helpful,
     'notHelpfulReason': notHelpfulReason,
@@ -148,7 +112,7 @@ class ChatMessage {
         ? null
         : {
             'fileName': fileAttachment!.fileName,
-            'fileUrl': fileAttachment!.fileUrl,
+            'fileId': fileAttachment!.fileId,
             'contentType': fileAttachment!.contentType,
           },
   };
@@ -165,9 +129,6 @@ class ChatMessage {
           DateTime.tryParse(json['timestamp']?.toString() ?? '') ??
           DateTime.now(),
       conversationId: json['conversationId'] as String?,
-      highlights:
-          (json['highlights'] as List?)?.map((e) => e.toString()).toList() ??
-          const [],
       followUpSuggestions:
           (json['followUpSuggestions'] as List?)
               ?.map((e) => e.toString())
@@ -180,7 +141,9 @@ class ChatMessage {
           ? UploadedFileAttachment(
               fileName:
                   (rawAttachment['fileName'] as String?) ?? 'Attached document',
-              fileUrl: rawAttachment['fileUrl'] as String?,
+              fileId: rawAttachment['fileId'] is int
+                  ? rawAttachment['fileId'] as int
+                  : int.tryParse(rawAttachment['fileId']?.toString() ?? ''),
               contentType: rawAttachment['contentType'] as String?,
             )
           : null,

@@ -11,7 +11,7 @@ class FinAssistApp extends StatelessWidget {
     return MaterialApp(
       title: 'FinAssist',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      theme: AppTheme.light,
       initialRoute: AppRoutes.splash,
       onGenerateRoute: onGenerateRoute,
       // Without this, Navigator's default initial-route generation sees

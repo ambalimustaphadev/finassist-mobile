@@ -1,31 +1,34 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/api_config.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/pagination.dart';
 import '../../../../core/services/statement_file_picker_service.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../chat/presentation/providers/chat_controller.dart';
-import '../../data/local/financial_data_store.dart';
 import '../../data/models/uploaded_statement.dart';
+import '../../data/repositories/api_document_repository.dart';
+import '../../data/repositories/document_repository.dart';
 import '../../data/repositories/file_upload_repository.dart';
 
+final documentRepositoryProvider = Provider<DocumentRepository>((ref) {
+  return ApiDocumentRepository(baseUrl: apiBaseUrl);
+});
+
 /// Rebuilt per authenticated user, same as `chatControllerProvider` and
-/// `profileImageControllerProvider`. Reuses the existing
-/// `statementFilePickerServiceProvider`, `fileUploadRepositoryProvider`
-/// and `financialDataStoreProvider` (all defined in `chat_controller.dart`
-/// since Chat's composer attachment flow shares them too) rather than
-/// inventing a parallel upload pipeline.
+/// `profileControllerProvider`. Reuses the existing
+/// `statementFilePickerServiceProvider`/`fileUploadRepositoryProvider`
+/// (both defined in `chat_controller.dart` since Chat's composer
+/// attachment flow shares them too) rather than inventing a parallel
+/// upload pipeline — only the document *list* now comes from here, via the
+/// real, paginated `GET /api/files`.
 final profileFinanceControllerProvider =
     StateNotifierProvider<ProfileFinanceController, ProfileFinanceState>((ref) {
-      final userId =
-          ref.watch(authControllerProvider.select((state) => state.user?.id)) ??
-          'guest';
+      ref.watch(authControllerProvider.select((state) => state.user?.id));
       return ProfileFinanceController(
         ref.watch(statementFilePickerServiceProvider),
         ref.watch(fileUploadRepositoryProvider),
-        ref.watch(financialDataStoreProvider),
-        userId,
-        () => ref
-            .read(chatControllerProvider.notifier)
-            .clearFinancialDataContext(),
+        ref.watch(documentRepositoryProvider),
       );
     });
 
@@ -35,75 +38,113 @@ class ProfileFinanceState {
   const ProfileFinanceState({
     this.statements = const [],
     this.isLoadingStatements = true,
+    this.loadError,
+    this.pagination,
+    this.isLoadingMore = false,
     this.uploadStatus = StatementUploadStatus.idle,
     this.uploadMessage,
-    this.isDeletingData = false,
-    this.deleteFailed = false,
+    this.deletingDocumentId,
   });
 
-  /// Statements this device has actually uploaded and had analyzed — never
-  /// a fake/placeholder count. Empty until the backend supports listing
-  /// statements or the user uploads one from this device.
+  /// Real, backend-authoritative documents this user has uploaded —
+  /// `GET /api/files`, never a fake/placeholder count.
   final List<UploadedStatement> statements;
 
   final bool isLoadingStatements;
+  final String? loadError;
+  final Pagination? pagination;
+  final bool isLoadingMore;
   final StatementUploadStatus uploadStatus;
   final String? uploadMessage;
-  final bool isDeletingData;
-  final bool deleteFailed;
+
+  /// The backend id of the document currently being deleted, if any —
+  /// lets the tile show its own spinner without disabling the whole list.
+  final int? deletingDocumentId;
 
   bool get hasFinancialData => statements.isNotEmpty;
+  bool get hasMoreStatements => pagination?.hasMore ?? false;
 
   ProfileFinanceState copyWith({
     List<UploadedStatement>? statements,
     bool? isLoadingStatements,
+    String? loadError,
+    bool clearLoadError = false,
+    Pagination? pagination,
+    bool clearPagination = false,
+    bool? isLoadingMore,
     StatementUploadStatus? uploadStatus,
     String? uploadMessage,
     bool clearUploadMessage = false,
-    bool? isDeletingData,
-    bool? deleteFailed,
+    int? deletingDocumentId,
+    bool clearDeletingDocumentId = false,
   }) {
     return ProfileFinanceState(
       statements: statements ?? this.statements,
       isLoadingStatements: isLoadingStatements ?? this.isLoadingStatements,
+      loadError: clearLoadError ? null : (loadError ?? this.loadError),
+      pagination: clearPagination ? null : (pagination ?? this.pagination),
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       uploadStatus: uploadStatus ?? this.uploadStatus,
       uploadMessage: clearUploadMessage
           ? null
           : (uploadMessage ?? this.uploadMessage),
-      isDeletingData: isDeletingData ?? this.isDeletingData,
-      deleteFailed: deleteFailed ?? false,
+      deletingDocumentId: clearDeletingDocumentId
+          ? null
+          : (deletingDocumentId ?? this.deletingDocumentId),
     );
   }
 }
 
-/// Coordinates the Profile page's "Your Finances" section: the locally
-/// tracked list of uploaded statements, uploading a new one via
-/// `POST /api/files/upload`, and deleting all stored financial data.
-///
-/// There is no backend endpoint yet for listing or deleting a user's
-/// statements server-side, so the statement list itself stays a local,
-/// on-device record of what this device has actually uploaded — but the
-/// upload call itself is real, not mocked.
+/// Coordinates Profile's financial-data summary: the real, backend-
+/// authoritative list of uploaded files (`GET /api/files`, shared with
+/// Chat's attachment flow) and deleting all of them at once.
 class ProfileFinanceController extends StateNotifier<ProfileFinanceState> {
   ProfileFinanceController(
     this._filePicker,
     this._uploadRepository,
-    this._store,
-    this._userId,
-    this._onFinancialDataCleared,
+    this._documentRepository,
   ) : super(const ProfileFinanceState()) {
     _load();
   }
 
   final StatementFilePickerService _filePicker;
   final FileUploadRepository _uploadRepository;
-  final FinancialDataStore _store;
-  final String _userId;
-  final void Function() _onFinancialDataCleared;
+  final DocumentRepository _documentRepository;
 
   Future<void> _load() async {
-    final statements = await _store.loadStatements(_userId);
-    state = state.copyWith(statements: statements, isLoadingStatements: false);
+    state = state.copyWith(isLoadingStatements: true, clearLoadError: true);
+    try {
+      final page = await _documentRepository.listFiles();
+      state = state.copyWith(
+        statements: page.items,
+        pagination: page.pagination,
+        isLoadingStatements: false,
+      );
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoadingStatements: false, loadError: e.message);
+    }
+  }
+
+  Future<void> refresh() => _load();
+
+  Future<void> loadMore() async {
+    final pagination = state.pagination;
+    if (pagination == null || !pagination.hasMore || state.isLoadingMore) {
+      return;
+    }
+    state = state.copyWith(isLoadingMore: true);
+    try {
+      final page = await _documentRepository.listFiles(
+        page: pagination.page + 1,
+      );
+      state = state.copyWith(
+        statements: [...state.statements, ...page.items],
+        pagination: page.pagination,
+        isLoadingMore: false,
+      );
+    } on ApiException {
+      state = state.copyWith(isLoadingMore: false);
+    }
   }
 
   Future<void> uploadStatement() async {
@@ -142,12 +183,11 @@ class ProfileFinanceController extends StateNotifier<ProfileFinanceState> {
       final uploaded = await _uploadRepository.uploadFile(file);
       final record = UploadedStatement(
         id: 'stmt-${uploaded.id}',
+        backendId: uploaded.id,
         fileName: uploaded.filename,
         uploadedAt: DateTime.now(),
-        fileUrl: uploaded.fileUrl,
         contentType: uploaded.contentType,
       );
-      await _store.addStatement(_userId, record);
       state = state.copyWith(
         statements: [record, ...state.statements],
         uploadStatus: StatementUploadStatus.success,
@@ -173,19 +213,23 @@ class ProfileFinanceController extends StateNotifier<ProfileFinanceState> {
     );
   }
 
-  /// Deletes all locally stored financial data for this user and clears
-  /// the active conversation's financial-data context, so the assistant
-  /// can't keep referencing a statement that was just deleted. Does not
-  /// touch the account, conversations, or profile picture.
-  Future<bool> deleteFinancialData() async {
-    state = state.copyWith(isDeletingData: true, deleteFailed: false);
+  /// Deletes a single document. Returns `false` (leaving [state] unchanged
+  /// beyond clearing the in-flight marker) if the backend rejects it, so
+  /// the UI can show a real error instead of silently removing a tile that
+  /// wasn't actually deleted server-side.
+  Future<bool> deleteDocument(int backendId) async {
+    state = state.copyWith(deletingDocumentId: backendId);
     try {
-      await _store.clear(_userId);
-      _onFinancialDataCleared();
-      state = state.copyWith(statements: const [], isDeletingData: false);
+      await _documentRepository.deleteFile(backendId);
+      state = state.copyWith(
+        statements: state.statements
+            .where((s) => s.backendId != backendId)
+            .toList(),
+        clearDeletingDocumentId: true,
+      );
       return true;
-    } catch (_) {
-      state = state.copyWith(isDeletingData: false, deleteFailed: true);
+    } on ApiException {
+      state = state.copyWith(clearDeletingDocumentId: true);
       return false;
     }
   }

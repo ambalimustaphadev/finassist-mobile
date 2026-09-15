@@ -25,7 +25,7 @@ class FileAttachmentCard extends StatelessWidget {
 
   /// When set, the whole card opens the shared in-app document viewer —
   /// only meaningful once the file has actually been uploaded (has a
-  /// [UploadedFileAttachment.fileUrl] to open).
+  /// [UploadedFileAttachment.fileId] to request a fresh view URL for).
   final VoidCallback? onTap;
 
   @override

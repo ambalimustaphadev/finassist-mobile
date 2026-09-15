@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:finassist/features/auth/presentation/widgets/auth_checkbox.dart';
+import 'package:finassist/features/chat/data/repositories/mock_chat_repository.dart';
+import 'package:finassist/features/chat/presentation/providers/chat_controller.dart';
+
 import 'support/pump_app.dart';
 
 Finder _fieldAt(int index) => find.byType(TextFormField).at(index);
@@ -21,20 +25,64 @@ Future<void> _goToLogin(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// Register's single checkbox (the Terms of Service/Privacy Policy
+/// agreement) — must be checked for `_handleCreateAccount` to actually call
+/// the register API.
+Future<void> _agreeToTerms(WidgetTester tester) async {
+  final checkbox = find.byType(AuthCheckbox);
+  await tester.ensureVisible(checkbox);
+  await tester.pump();
+  await tester.tap(checkbox);
+  await tester.pump();
+}
+
 void main() {
   group('Back navigation', () {
-    testWidgets('Login has no back arrow', (tester) async {
-      await pumpApp(tester);
-      expect(find.text('Welcome back'), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
-    });
+    testWidgets(
+      'Login has no back arrow when reached as the auth flow\'s root',
+      (tester) async {
+        await pumpApp(tester);
+        expect(find.text('Welcome back'), findsOneWidget);
+        expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+      },
+    );
 
-    testWidgets('Register has no back arrow', (tester) async {
+    testWidgets('Register has a working back arrow that returns to Login', (
+      tester,
+    ) async {
       await pumpApp(tester);
       await _goToRegister(tester);
-      expect(find.text('Create your account'), findsOneWidget);
+      expect(find.text('Create your \n Account'), findsOneWidget);
+
+      final backArrow = find.byIcon(Icons.arrow_back_rounded);
+      expect(backArrow, findsOneWidget);
+      await tester.tap(backArrow);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Welcome back'), findsOneWidget);
+      // Round-tripping through Register must not leave a route Login can
+      // still pop to — same root, not just the same-looking screen.
       expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+      expect(
+        Navigator.of(tester.element(find.text('Welcome back'))).canPop(),
+        isFalse,
+      );
     });
+
+    testWidgets(
+      'A system/hardware back press at Login (the auth flow\'s root) is a '
+      'no-op, never revealing a blank page underneath',
+      (tester) async {
+        await pumpApp(tester);
+        expect(find.text('Welcome back'), findsOneWidget);
+
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+
+        expect(find.text('Welcome back'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 
   group('Validation', () {
@@ -77,6 +125,34 @@ void main() {
 
       expect(find.text("Passwords don't match"), findsOneWidget);
     });
+
+    testWidgets(
+      'Create account is blocked until the Terms/Privacy checkbox is agreed',
+      (tester) async {
+        await pumpApp(tester);
+        await _goToRegister(tester);
+
+        await tester.enterText(_fieldAt(0), 'Ada');
+        await tester.enterText(_fieldAt(1), 'Lovelace');
+        await tester.enterText(_fieldAt(2), 'ada3@finassist.com');
+        await tester.enterText(_fieldAt(3), 'adalovelace3');
+        await tester.enterText(_fieldAt(4), 'securePass1');
+        await tester.enterText(_fieldAt(5), 'securePass1');
+        final createAccountButton = find.text('Create account');
+        await tester.ensureVisible(createAccountButton);
+        await tester.pump();
+        await tester.tap(createAccountButton);
+        await tester.pumpAndSettle();
+
+        // Valid form, but the checkbox was never checked — a purely
+        // client-side gate, so this must not call the register API at all.
+        expect(
+          find.text('Please agree to the Terms of Service and Privacy Policy.'),
+          findsOneWidget,
+        );
+        expect(find.text('Account created'), findsNothing);
+      },
+    );
   });
 
   group('Error state isolation', () {
@@ -94,6 +170,7 @@ void main() {
       await tester.enterText(_fieldAt(3), 'adalovelace');
       await tester.enterText(_fieldAt(4), 'securePass1');
       await tester.enterText(_fieldAt(5), 'securePass1');
+      await _agreeToTerms(tester);
       final createAccountButton = find.text('Create account');
       await tester.ensureVisible(createAccountButton);
       await tester.pump();
@@ -124,7 +201,7 @@ void main() {
 
       await _goToRegister(tester);
 
-      expect(find.text('Create your account'), findsOneWidget);
+      expect(find.text('Create your \n Account'), findsOneWidget);
       expect(find.textContaining("doesn't look right"), findsNothing);
     });
   });
@@ -209,21 +286,28 @@ void main() {
   });
 
   testWidgets(
-    'Login with the demo account reaches the dashboard with the right name',
+    'Login with the demo account reaches the main shell with the right name',
     (tester) async {
-      await pumpApp(tester);
+      await pumpApp(
+        tester,
+        overrides: [
+          chatRepositoryProvider.overrideWithValue(MockChatRepository()),
+        ],
+      );
 
       await loginWithDemoAccount(tester);
       await tester.pumpAndSettle();
+      await pumpUntil(tester, find.textContaining('Mustapha'));
 
-      expect(find.byKey(const Key('dashboardScrollView')), findsOneWidget);
+      expect(find.byKey(const Key('mainShellScreen')), findsOneWidget);
       // The demo account's first name, not a hardcoded one.
       expect(find.textContaining('Mustapha'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'Register screen field order matches the backend contract, and success returns to login',
+    'Register screen field order matches the backend contract, and success '
+    'returns to login',
     (tester) async {
       await pumpApp(tester);
       await _goToRegister(tester);
@@ -231,7 +315,7 @@ void main() {
       final labels = [
         'First name',
         'Last name',
-        'Email',
+        'Email address',
         'Username',
         'Password',
         'Confirm password',
@@ -255,23 +339,34 @@ void main() {
       await tester.enterText(_fieldAt(3), 'adalovelace');
       await tester.enterText(_fieldAt(4), 'securePass1');
       await tester.enterText(_fieldAt(5), 'securePass1');
+      await _agreeToTerms(tester);
       final createAccountButton = find.text('Create account');
       await tester.ensureVisible(createAccountButton);
       await tester.pump();
       await tester.tap(createAccountButton);
-      await pumpUntil(tester, find.text('Account created'));
-      // Let the sheet's slide-up entrance finish before interacting with
-      // it — mid-transition, its contents can sit below the viewport.
+      await pumpUntil(
+        tester,
+        find.text('Account Created\nSuccessfully!', findRichText: true),
+      );
       await tester.pumpAndSettle();
 
-      // A polished success sheet, not a generic "registered successfully"
-      // message — tapping through it returns to Login.
-      expect(find.text('Account created'), findsOneWidget);
-      await tester.tap(find.text('Continue to login'));
+      // A full-screen success moment, not a generic "registered
+      // successfully" message. Also proves the separate first/last name
+      // fields actually reach the backend contract as distinct values
+      // (`MockAuthRepository` would otherwise register a blank/garbled
+      // name).
+      expect(
+        find.text('Account Created\nSuccessfully!', findRichText: true),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
 
-      // Registration doesn't auto-authenticate — back on Login.
-      expect(find.text('Welcome back'), findsOneWidget);
+      // Registration immediately signs the new account in (same
+      // credentials, no second manual Login step) — straight to Chat,
+      // not back on Login.
+      expect(find.byKey(const Key('mainShellScreen')), findsOneWidget);
+      expect(find.text('Welcome back'), findsNothing);
     },
   );
 }

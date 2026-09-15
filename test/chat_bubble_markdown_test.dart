@@ -10,7 +10,6 @@ import 'package:finassist/features/chat/data/models/chat_message.dart';
 import 'package:finassist/features/chat/data/repositories/mock_chat_repository.dart';
 import 'package:finassist/features/chat/presentation/providers/chat_controller.dart';
 import 'package:finassist/features/chat/presentation/widgets/chat_bubble.dart';
-import 'package:finassist/features/dashboard/data/repositories/mock_financial_repository.dart';
 
 import 'support/pump_app.dart';
 
@@ -72,15 +71,13 @@ Future<List<TextStyle>> _pumpAssistantMessageStyles(
     ProviderScope(
       overrides: [
         authRepositoryProvider.overrideWithValue(MockAuthRepository()),
-        chatRepositoryProvider.overrideWithValue(
-          MockChatRepository(MockFinancialRepository()),
-        ),
+        chatRepositoryProvider.overrideWithValue(MockChatRepository()),
         statementFilePickerServiceProvider.overrideWithValue(
           FakeStatementFilePickerService(),
         ),
       ],
       child: MaterialApp(
-        theme: AppTheme.dark,
+        theme: AppTheme.light,
         home: Scaffold(body: ChatBubble(message: message)),
       ),
     ),

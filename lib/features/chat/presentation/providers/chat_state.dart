@@ -1,4 +1,3 @@
-import '../../../../shared/models/uploaded_file_attachment.dart';
 import '../../data/models/chat_message.dart';
 import '../../data/models/conversation.dart';
 
@@ -8,8 +7,8 @@ import '../../data/models/conversation.dart';
 enum ConversationLoadStatus { loading, loaded, error }
 
 /// Immutable state for the chat screen: the recent-conversations list, the
-/// active conversation's messages, whether the assistant is currently
-/// replying, and what financial context this conversation has unlocked.
+/// active conversation's messages, and whether the assistant is currently
+/// replying.
 class ChatState {
   const ChatState({
     this.conversations = const [],
@@ -20,12 +19,6 @@ class ChatState {
     this.isAssistantTyping = false,
     this.typingLabel,
     this.streamingMessageId,
-    this.hasFinancialData = false,
-    this.statementFileName,
-    this.statementPeriodStart,
-    this.statementPeriodEnd,
-    this.pendingAttachmentMessageId,
-    this.lastFailedAttachment,
     this.attachmentUploadError,
   });
 
@@ -48,34 +41,16 @@ class ChatState {
   final List<ChatMessage> messages;
   final bool isAssistantTyping;
 
-  /// Optional small caption shown above the typing dots, e.g. "Analyzing
-  /// your statement". This is also the seam for future AI agent/tool
-  /// status messages ("Checking your transactions...") once the backend
-  /// can report which tool it's currently calling — nothing fabricates
-  /// those today.
+  /// Optional small caption shown above the typing dots, e.g. "Uploading
+  /// statement.pdf...". This is also the seam for future AI agent/tool
+  /// status messages once the backend can report which tool it's
+  /// currently calling — nothing fabricates those today.
   final String? typingLabel;
 
   /// The id of the assistant message currently receiving streamed text, if
   /// any — lets the bubble show a subtle in-progress affordance without
   /// the whole screen re-rendering.
   final String? streamingMessageId;
-
-  /// Whether a statement has been uploaded and analyzed in this
-  /// conversation — gates whether the assistant can answer
-  /// transaction-specific questions.
-  final bool hasFinancialData;
-
-  final String? statementFileName;
-  final DateTime? statementPeriodStart;
-  final DateTime? statementPeriodEnd;
-
-  /// The id of a just-attached file that hasn't started analysis yet —
-  /// while set, its message shows a remove ("×") affordance.
-  final String? pendingAttachmentMessageId;
-
-  /// Set when the most recent analysis attempt failed, so "Try again" has
-  /// something to retry.
-  final UploadedFileAttachment? lastFailedAttachment;
 
   /// A one-shot, user-facing message set when uploading a composer
   /// attachment fails (so the chat request is never sent) — the chat
@@ -99,19 +74,6 @@ class ChatState {
     bool clearTypingLabel = false,
     String? streamingMessageId,
     bool clearStreamingMessageId = false,
-    bool? hasFinancialData,
-    String? statementFileName,
-    DateTime? statementPeriodStart,
-    DateTime? statementPeriodEnd,
-    // Statement filename/period are always set or cleared together (one
-    // analyzed statement per conversation today), so one flag resets all
-    // three — e.g. when the user deletes their financial data from
-    // Profile and the active conversation must stop referencing it.
-    bool clearStatementContext = false,
-    String? pendingAttachmentMessageId,
-    bool clearPendingAttachment = false,
-    UploadedFileAttachment? lastFailedAttachment,
-    bool clearLastFailedAttachment = false,
     String? attachmentUploadError,
     bool clearAttachmentUploadError = false,
   }) {
@@ -130,22 +92,6 @@ class ChatState {
       streamingMessageId: clearStreamingMessageId
           ? null
           : (streamingMessageId ?? this.streamingMessageId),
-      hasFinancialData: hasFinancialData ?? this.hasFinancialData,
-      statementFileName: clearStatementContext
-          ? null
-          : (statementFileName ?? this.statementFileName),
-      statementPeriodStart: clearStatementContext
-          ? null
-          : (statementPeriodStart ?? this.statementPeriodStart),
-      statementPeriodEnd: clearStatementContext
-          ? null
-          : (statementPeriodEnd ?? this.statementPeriodEnd),
-      pendingAttachmentMessageId: clearPendingAttachment
-          ? null
-          : (pendingAttachmentMessageId ?? this.pendingAttachmentMessageId),
-      lastFailedAttachment: clearLastFailedAttachment
-          ? null
-          : (lastFailedAttachment ?? this.lastFailedAttachment),
       attachmentUploadError: clearAttachmentUploadError
           ? null
           : (attachmentUploadError ?? this.attachmentUploadError),

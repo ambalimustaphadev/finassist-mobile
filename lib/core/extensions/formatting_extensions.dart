@@ -1,23 +1,15 @@
 import 'package:intl/intl.dart';
 
-/// Formatting helpers shared across dashboard and chat features so currency
-/// and date rendering stays consistent everywhere.
-extension CurrencyFormatting on num {
-  String toNaira({bool compact = false}) {
-    final formatter = NumberFormat.currency(
-      locale: 'en_NG',
-      symbol: '₦',
-      decimalDigits: 0,
-    );
-    return formatter.format(this);
-  }
-
-  String toPercentage({int decimals = 1}) => '${toStringAsFixed(decimals)}%';
+/// Formats [amount] with an arbitrary currency [symbol] — used by the
+/// Tools calculators, whose currency preference is chosen per-calculation
+/// rather than fixed. Plain thousands separators, no locale-specific
+/// currency rules.
+String formatCurrency(double amount, String symbol) {
+  final formatter = NumberFormat('#,##0');
+  return '$symbol${formatter.format(amount)}';
 }
 
 extension DateFormatting on DateTime {
-  String toMonthDayYear() => DateFormat('MMM d, yyyy').format(this);
-
   String toTimeOfDay() => DateFormat('h:mm a').format(this);
 
   /// Short, human label for a conversation-list timestamp: "Today",
@@ -37,13 +29,6 @@ extension DateFormatting on DateTime {
     if (year == today.year) return DateFormat('MMM d').format(this);
     return DateFormat('MMM d, yyyy').format(this);
   }
-}
-
-/// Formats a statement/spending period as "May 1 – May 31, 2024".
-String formatDateRange(DateTime start, DateTime end) {
-  final startLabel = DateFormat('MMM d').format(start);
-  final endLabel = DateFormat('MMM d, yyyy').format(end);
-  return '$startLabel – $endLabel';
 }
 
 /// Formats a byte count as a short human-readable size, e.g. "1.2 MB".

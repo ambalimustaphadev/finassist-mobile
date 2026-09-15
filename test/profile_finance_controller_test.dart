@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:finassist/core/network/api_client.dart';
+import 'package:finassist/core/network/pagination.dart';
 import 'package:finassist/core/services/statement_file_picker_service.dart';
-import 'package:finassist/features/profile/data/local/financial_data_store.dart';
 import 'package:finassist/features/profile/data/models/uploaded_file.dart';
+import 'package:finassist/features/profile/data/models/uploaded_statement.dart';
+import 'package:finassist/features/profile/data/repositories/document_repository.dart';
 import 'package:finassist/features/profile/data/repositories/file_upload_repository.dart';
 import 'package:finassist/features/profile/presentation/providers/profile_finance_controller.dart';
 
@@ -13,27 +16,10 @@ const _secureStorageChannel = MethodChannel(
   'plugins.it_nomads.com/flutter_secure_storage',
 );
 
-void _mockSecureStorage(
-  TestWidgetsFlutterBinding binding,
-  Map<String, String> values,
-) {
+void _mockSecureStorage(TestWidgetsFlutterBinding binding) {
   binding.defaultBinaryMessenger.setMockMethodCallHandler(
     _secureStorageChannel,
-    (call) async {
-      switch (call.method) {
-        case 'read':
-          return values[call.arguments['key']];
-        case 'write':
-          values[call.arguments['key'] as String] =
-              call.arguments['value'] as String;
-          return null;
-        case 'delete':
-          values.remove(call.arguments['key']);
-          return null;
-        default:
-          return null;
-      }
-    },
+    (call) async => null,
   );
 }
 
@@ -74,22 +60,57 @@ class _FakeFileUploadRepository implements FileUploadRepository {
   }
 }
 
+/// A fake standing in for the real `GET /api/files`/`DELETE /api/files/<id>`
+/// calls — [perPage] lets a test exercise pagination (`loadMore`) without a
+/// real backend.
+class _FakeDocumentRepository implements DocumentRepository {
+  _FakeDocumentRepository({
+    List<UploadedStatement>? seed,
+    this.perPage = 20,
+    this.loadError,
+    this.deleteError,
+  }) : _files = List.of(seed ?? const []);
+
+  final List<UploadedStatement> _files;
+  final int perPage;
+  final Object? loadError;
+  final Object? deleteError;
+
+  @override
+  Future<Paginated<UploadedStatement>> listFiles({int page = 1}) async {
+    if (loadError != null) throw loadError!;
+    final start = (page - 1) * perPage;
+    final items = start >= _files.length
+        ? const <UploadedStatement>[]
+        : _files.sublist(start, (start + perPage).clamp(0, _files.length));
+    return Paginated(
+      items: items,
+      pagination: Pagination(
+        page: page,
+        perPage: perPage,
+        total: _files.length,
+      ),
+    );
+  }
+
+  @override
+  Future<void> deleteFile(int id) async {
+    if (deleteError != null) throw deleteError!;
+    _files.removeWhere((f) => f.backendId == id);
+  }
+
+  @override
+  Future<String> getViewUrl(int fileId) async {
+    return 'https://pub-test.r2.dev/signed/$fileId';
+  }
+}
+
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    _mockSecureStorage(binding, {});
+    _mockSecureStorage(binding);
     _mockPathProvider(binding);
-  });
-  tearDown(() {
-    binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      _secureStorageChannel,
-      null,
-    );
-    binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      _pathProviderChannel,
-      null,
-    );
   });
 
   Future<void> waitUntil(
@@ -116,9 +137,7 @@ void main() {
     final controller = ProfileFinanceController(
       _FakeFilePicker(result: null),
       _FakeFileUploadRepository(),
-      FinancialDataStore(),
-      'user-1',
-      () {},
+      _FakeDocumentRepository(),
     );
     await waitUntil(() => !controller.state.isLoadingStatements);
 
@@ -126,13 +145,25 @@ void main() {
     expect(controller.state.hasFinancialData, isFalse);
   });
 
+  test('a failed load surfaces a clear error, not a crash', () async {
+    final controller = ProfileFinanceController(
+      _FakeFilePicker(result: null),
+      _FakeFileUploadRepository(),
+      _FakeDocumentRepository(
+        loadError: const ApiException("Couldn't connect."),
+      ),
+    );
+    await waitUntil(() => !controller.state.isLoadingStatements);
+
+    expect(controller.state.loadError, isNotNull);
+    expect(controller.state.statements, isEmpty);
+  });
+
   test('cancelling the file picker leaves state untouched', () async {
     final controller = ProfileFinanceController(
       _FakeFilePicker(result: null),
       _FakeFileUploadRepository(),
-      FinancialDataStore(),
-      'user-1',
-      () {},
+      _FakeDocumentRepository(),
     );
     await waitUntil(() => !controller.state.isLoadingStatements);
 
@@ -164,13 +195,9 @@ void main() {
             filename: 'Statement.pdf',
             size: 1024,
             contentType: 'application/pdf',
-            key: 'statements/1/uuid.pdf',
-            fileUrl: 'https://pub-test.r2.dev/statements/1/uuid.pdf',
           ),
         ),
-        FinancialDataStore(),
-        'user-1',
-        () {},
+        _FakeDocumentRepository(),
       );
       await waitUntil(() => !controller.state.isLoadingStatements);
 
@@ -179,6 +206,7 @@ void main() {
       expect(controller.state.uploadStatus, StatementUploadStatus.success);
       expect(controller.state.statements, hasLength(1));
       expect(controller.state.statements.single.fileName, 'Statement.pdf');
+      expect(controller.state.statements.single.backendId, 1);
       expect(controller.state.hasFinancialData, isTrue);
     },
   );
@@ -202,13 +230,9 @@ void main() {
             filename: 'Statement.pdf',
             size: 3,
             contentType: 'application/pdf',
-            key: 'statements/1/uuid2.pdf',
-            fileUrl: 'https://pub-test.r2.dev/statements/1/uuid2.pdf',
           ),
         ),
-        FinancialDataStore(),
-        'user-1',
-        () {},
+        _FakeDocumentRepository(),
       );
       await waitUntil(() => !controller.state.isLoadingStatements);
 
@@ -228,9 +252,7 @@ void main() {
       final controller = ProfileFinanceController(
         picker,
         _FakeFileUploadRepository(),
-        FinancialDataStore(),
-        'user-1',
-        () {},
+        _FakeDocumentRepository(),
       );
       await waitUntil(() => !controller.state.isLoadingStatements);
 
@@ -258,9 +280,7 @@ void main() {
       final controller = ProfileFinanceController(
         picker,
         _FakeFileUploadRepository(errorToThrow: Exception('boom')),
-        FinancialDataStore(),
-        'user-1',
-        () {},
+        _FakeDocumentRepository(),
       );
       await waitUntil(() => !controller.state.isLoadingStatements);
 
@@ -291,9 +311,7 @@ void main() {
         _FakeFileUploadRepository(
           errorToThrow: const FileUploadUnauthorizedException(),
         ),
-        FinancialDataStore(),
-        'user-1',
-        () {},
+        _FakeDocumentRepository(),
       );
       await waitUntil(() => !controller.state.isLoadingStatements);
 
@@ -304,99 +322,112 @@ void main() {
     },
   );
 
-  test(
-    'deleting financial data clears statements and notifies the chat context',
-    () async {
-      final tempFile = await createTempFile('Statement.pdf');
-      addTearDown(() => tempFile.delete());
-
-      final picker = _FakeFilePicker(
-        result: PickedFile(
-          name: 'Statement.pdf',
-          extension: 'pdf',
-          sizeBytes: 1024,
-          path: tempFile.path,
-        ),
-      );
-      var clearedCalled = false;
-      final store = FinancialDataStore();
-      final controller = ProfileFinanceController(
-        picker,
-        _FakeFileUploadRepository(
-          result: const UploadedFile(
-            id: 3,
-            filename: 'Statement.pdf',
-            size: 1024,
-            contentType: 'application/pdf',
-            key: 'statements/1/uuid3.pdf',
-            fileUrl: 'https://pub-test.r2.dev/statements/1/uuid3.pdf',
+  test('deleteDocument removes just that document on success', () async {
+    final controller = ProfileFinanceController(
+      _FakeFilePicker(result: null),
+      _FakeFileUploadRepository(),
+      _FakeDocumentRepository(
+        seed: [
+          UploadedStatement(
+            id: 'stmt-10',
+            backendId: 10,
+            fileName: 'August.pdf',
+            uploadedAt: DateTime(2026, 1, 1),
           ),
+        ],
+      ),
+    );
+    await waitUntil(() => !controller.state.isLoadingStatements);
+    expect(controller.state.statements, hasLength(1));
+
+    final success = await controller.deleteDocument(10);
+
+    expect(success, isTrue);
+    expect(controller.state.statements, isEmpty);
+    expect(controller.state.deletingDocumentId, isNull);
+  });
+
+  test('a failed deleteDocument leaves the document in place', () async {
+    final controller = ProfileFinanceController(
+      _FakeFilePicker(result: null),
+      _FakeFileUploadRepository(),
+      _FakeDocumentRepository(
+        seed: [
+          UploadedStatement(
+            id: 'stmt-11',
+            backendId: 11,
+            fileName: 'August.pdf',
+            uploadedAt: DateTime(2026, 1, 1),
+          ),
+        ],
+        deleteError: const ApiException("Couldn't connect."),
+      ),
+    );
+    await waitUntil(() => !controller.state.isLoadingStatements);
+
+    final success = await controller.deleteDocument(11);
+
+    expect(success, isFalse);
+    expect(controller.state.statements, hasLength(1));
+  });
+
+  test(
+    'loadMore appends the next page without dropping what\'s loaded',
+    () async {
+      final controller = ProfileFinanceController(
+        _FakeFilePicker(result: null),
+        _FakeFileUploadRepository(),
+        _FakeDocumentRepository(
+          perPage: 1,
+          seed: [
+            UploadedStatement(
+              id: 'stmt-1',
+              backendId: 1,
+              fileName: 'Jan.pdf',
+              uploadedAt: DateTime(2026, 1, 1),
+            ),
+            UploadedStatement(
+              id: 'stmt-2',
+              backendId: 2,
+              fileName: 'Feb.pdf',
+              uploadedAt: DateTime(2026, 2, 1),
+            ),
+          ],
         ),
-        store,
-        'user-1',
-        () => clearedCalled = true,
       );
       await waitUntil(() => !controller.state.isLoadingStatements);
-      await controller.uploadStatement();
       expect(controller.state.statements, hasLength(1));
+      expect(controller.state.hasMoreStatements, isTrue);
 
-      final success = await controller.deleteFinancialData();
+      await controller.loadMore();
 
-      expect(success, isTrue);
-      expect(controller.state.statements, isEmpty);
-      expect(controller.state.hasFinancialData, isFalse);
-      expect(clearedCalled, isTrue);
-      // Persisted deletion, not just in-memory.
-      expect(await store.loadStatements('user-1'), isEmpty);
+      expect(controller.state.statements, hasLength(2));
+      expect(controller.state.hasMoreStatements, isFalse);
     },
   );
 
-  test('uploaded statements persist across a simulated app restart', () async {
-    final tempFile = await createTempFile('Statement.pdf');
-    addTearDown(() => tempFile.delete());
+  test(
+    'a freshly constructed controller loads whatever the backend already has',
+    () async {
+      final repository = _FakeDocumentRepository(
+        seed: [
+          UploadedStatement(
+            id: 'stmt-4',
+            backendId: 4,
+            fileName: 'Statement.pdf',
+            uploadedAt: DateTime(2026, 1, 1),
+          ),
+        ],
+      );
+      final controller = ProfileFinanceController(
+        _FakeFilePicker(result: null),
+        _FakeFileUploadRepository(),
+        repository,
+      );
+      await waitUntil(() => !controller.state.isLoadingStatements);
 
-    final picker = _FakeFilePicker(
-      result: PickedFile(
-        name: 'Statement.pdf',
-        extension: 'pdf',
-        sizeBytes: 1024,
-        path: tempFile.path,
-      ),
-    );
-    final store = FinancialDataStore();
-    final firstController = ProfileFinanceController(
-      picker,
-      _FakeFileUploadRepository(
-        result: const UploadedFile(
-          id: 4,
-          filename: 'Statement.pdf',
-          size: 1024,
-          contentType: 'application/pdf',
-          key: 'statements/1/uuid4.pdf',
-          fileUrl: 'https://pub-test.r2.dev/statements/1/uuid4.pdf',
-        ),
-      ),
-      store,
-      'user-1',
-      () {},
-    );
-    await waitUntil(() => !firstController.state.isLoadingStatements);
-    await firstController.uploadStatement();
-    expect(firstController.state.statements, hasLength(1));
-
-    final restartedController = ProfileFinanceController(
-      _FakeFilePicker(result: null),
-      _FakeFileUploadRepository(),
-      store,
-      'user-1',
-      () {},
-    );
-    await waitUntil(() => !restartedController.state.isLoadingStatements);
-
-    expect(restartedController.state.statements, hasLength(1));
-    expect(
-      restartedController.state.statements.single.fileName,
-      'Statement.pdf',
-    );
-  });
+      expect(controller.state.statements, hasLength(1));
+      expect(controller.state.statements.single.fileName, 'Statement.pdf');
+    },
+  );
 }

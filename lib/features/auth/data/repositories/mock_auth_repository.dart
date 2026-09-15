@@ -116,4 +116,9 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout() async {}
+
+  /// No real token/refresh concept in this in-memory mock — there is
+  /// never anything valid to refresh.
+  @override
+  Future<String?> refreshAccessToken() async => null;
 }

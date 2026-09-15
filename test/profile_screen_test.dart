@@ -1,28 +1,50 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:finassist/core/network/api_client.dart';
 import 'package:finassist/features/chat/data/repositories/mock_chat_repository.dart';
 import 'package:finassist/features/chat/presentation/providers/chat_controller.dart';
-import 'package:finassist/features/dashboard/data/repositories/mock_financial_repository.dart';
-import 'package:finassist/features/dashboard/presentation/widgets/app_bottom_nav_bar.dart';
-import 'package:finassist/shared/widgets/document_viewer_screen.dart';
+import 'package:finassist/features/profile/data/models/profile.dart';
+import 'package:finassist/features/profile/data/repositories/profile_repository.dart';
+import 'package:finassist/features/shell/presentation/widgets/app_bottom_nav_bar.dart';
 
 import 'support/pump_app.dart';
 
-/// Covers Profile navigation (from the dashboard avatar and the bottom
+/// `/api/profile` and its one automatic retry (see `ProfileController._load`)
+/// both fail on every call — simulates the API being down for the whole
+/// time Profile is on screen, with no picture upload or other mutation
+/// ever giving `state.profile` a chance to get populated another way.
+class _AlwaysFailingProfileRepository implements ProfileRepository {
+  @override
+  Future<Profile> getProfile() async {
+    throw const ApiException("Couldn't connect.");
+  }
+
+  @override
+  Future<Profile> updateProfile(Map<String, dynamic> changes) async {
+    throw const ApiException("Couldn't connect.");
+  }
+
+  @override
+  Future<Profile> uploadProfilePicture(File file) async {
+    throw const ApiException("Couldn't connect.");
+  }
+}
+
+/// Covers Profile navigation (from Chat's header avatar and the bottom
 /// nav), that it shows the real authenticated user's details rather than
 /// anything hardcoded, and that logout actually navigates back to Login.
 void main() {
-  Future<void> openDashboard(WidgetTester tester) async {
+  Future<void> openChat(WidgetTester tester) async {
     await pumpApp(
       tester,
       overrides: [
         statementFilePickerServiceProvider.overrideWithValue(
           FakeStatementFilePickerService(),
         ),
-        chatRepositoryProvider.overrideWithValue(
-          MockChatRepository(MockFinancialRepository()),
-        ),
+        chatRepositoryProvider.overrideWithValue(MockChatRepository()),
       ],
     );
     await loginWithDemoAccount(tester);
@@ -30,11 +52,11 @@ void main() {
   }
 
   testWidgets(
-    'tapping the dashboard avatar opens Profile with the real user\'s details',
+    "tapping Chat's header avatar opens Profile with the real user's details",
     (tester) async {
-      await openDashboard(tester);
+      await openChat(tester);
 
-      await tester.tap(find.byKey(const Key('dashboardProfileAvatar')));
+      await tester.tap(find.bySemanticsLabel('Open profile'));
       await tester.pumpAndSettle();
 
       // The Profile screen's own title, distinct from the bottom nav's
@@ -58,10 +80,40 @@ void main() {
     },
   );
 
+  testWidgets(
+    "when /api/profile is down (initial load and its one retry both fail), "
+    "Profile still shows the signed-in user's name/username/email from the "
+    'already-authenticated session instead of going blank',
+    (tester) async {
+      await pumpApp(
+        tester,
+        overrides: [
+          statementFilePickerServiceProvider.overrideWithValue(
+            FakeStatementFilePickerService(),
+          ),
+          chatRepositoryProvider.overrideWithValue(MockChatRepository()),
+        ],
+        profileRepository: _AlwaysFailingProfileRepository(),
+      );
+      await loginWithDemoAccount(tester);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Open profile'));
+      await tester.pumpAndSettle();
+
+      // Same demo-account identity as the happy-path test above, but
+      // sourced from `authControllerProvider`'s cached `AuthUser` since
+      // `/api/profile` never actually succeeded here.
+      expect(find.text('Mustapha Ambali'), findsOneWidget);
+      expect(find.text('@mustapha'), findsOneWidget);
+      expect(find.text('demo@finassist.com'), findsOneWidget);
+    },
+  );
+
   testWidgets('tapping the "Profile" bottom nav tab opens Profile', (
     tester,
   ) async {
-    await openDashboard(tester);
+    await openChat(tester);
 
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
@@ -72,7 +124,7 @@ void main() {
   testWidgets(
     'the bottom navigation bar stays visible after switching to Profile',
     (tester) async {
-      await openDashboard(tester);
+      await openChat(tester);
 
       expect(find.byType(AppBottomNavBar), findsOneWidget);
 
@@ -95,7 +147,7 @@ void main() {
   testWidgets('"Appearance" is not present on the Profile page', (
     tester,
   ) async {
-    await openDashboard(tester);
+    await openChat(tester);
 
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
@@ -104,63 +156,23 @@ void main() {
   });
 
   testWidgets(
-    'Documents: tapping an uploaded document opens it inside FinAssist, '
-    'never a browser, and back returns to Documents',
+    'Profile has no separate Documents entry — documents live inside their '
+    'conversation, not a Profile document-management screen',
     (tester) async {
-      await pumpApp(
-        tester,
-        overrides: [
-          statementFilePickerServiceProvider.overrideWithValue(
-            FakeStatementFilePickerService(),
-          ),
-          chatRepositoryProvider.overrideWithValue(
-            MockChatRepository(MockFinancialRepository()),
-          ),
-          fileUploadRepositoryProvider.overrideWithValue(
-            FakeFileUploadRepository(),
-          ),
-        ],
-      );
-      await loginWithDemoAccount(tester);
-      await tester.pumpAndSettle();
+      await openChat(tester);
 
       await tester.tap(find.text('Profile'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Documents'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('No documents yet'), findsOneWidget);
-
-      await tester.tap(find.text('Upload a document'));
-      await pumpUntil(tester, find.text('GTBank_Statement.pdf'));
-      expect(find.text('No documents yet'), findsNothing);
-
-      await tester.tap(find.text('GTBank_Statement.pdf'));
-      await tester.pumpAndSettle();
-
-      // The shared in-app viewer opened — never a browser — and shows
-      // this exact document.
-      expect(find.byType(DocumentViewerScreen), findsOneWidget);
-      expect(
-        find.descendant(
-          of: find.byType(AppBar),
-          matching: find.text('GTBank_Statement.pdf'),
-        ),
-        findsOneWidget,
-      );
-
-      await tester.pageBack();
-      await tester.pumpAndSettle();
-
-      expect(find.byType(DocumentViewerScreen), findsNothing);
-      expect(find.text('GTBank_Statement.pdf'), findsOneWidget);
+      // The whole page is short enough now (no Documents row) that nothing
+      // further below needs scrolling into view to make this assertion.
+      expect(find.text('Documents'), findsNothing);
     },
   );
 
   testWidgets('logging out clears the session and returns to Login', (
     tester,
   ) async {
-    await openDashboard(tester);
+    await openChat(tester);
 
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
@@ -179,7 +191,7 @@ void main() {
     await tester.tap(logoutRow);
     await tester.pumpAndSettle();
 
-    expect(find.text('Log out?'), findsOneWidget);
+    expect(find.text('Log out of FinAssist?'), findsOneWidget);
     await tester.tap(
       find.descendant(
         of: find.byType(AlertDialog),

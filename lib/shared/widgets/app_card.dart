@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 
-/// The base card surface used across FinAssist: dark surface, subtle
+/// The base card surface used across FinAssist: light surface, subtle
 /// border, soft shadow and rounded corners.
 class AppCard extends StatelessWidget {
   const AppCard({
@@ -31,9 +31,9 @@ class AppCard extends StatelessWidget {
         border: Border.all(color: AppColors.borderSubtle),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),

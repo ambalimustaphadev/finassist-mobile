@@ -9,14 +9,11 @@ import 'package:finassist/features/chat/data/local/local_conversation_store.dart
 import 'package:finassist/features/chat/data/models/chat_message.dart';
 import 'package:finassist/features/chat/data/models/chat_stream_chunk.dart';
 import 'package:finassist/features/chat/data/models/conversation.dart';
-import 'package:finassist/features/chat/data/models/statement_analysis_result.dart';
 import 'package:finassist/features/chat/data/repositories/chat_repository.dart';
 import 'package:finassist/features/chat/presentation/providers/chat_controller.dart';
 import 'package:finassist/features/chat/presentation/providers/chat_state.dart';
-import 'package:finassist/features/profile/data/local/financial_data_store.dart';
 import 'package:finassist/features/profile/data/models/uploaded_file.dart';
 import 'package:finassist/features/profile/data/repositories/file_upload_repository.dart';
-import 'package:finassist/shared/models/uploaded_file_attachment.dart';
 
 import 'support/pump_app.dart';
 
@@ -128,17 +125,30 @@ class _FakeChatRepository implements ChatRepository {
     conversations = conversations.where((c) => c.id != conversationId).toList();
   }
 
-  /// The `fileUrl` most recently passed to [sendMessage] — lets tests
+  /// The `fileId` most recently passed to [sendMessage] — lets tests
   /// confirm it actually reached the chat request, not just the upload.
-  String? lastReceivedFileUrl;
+  int? lastReceivedFileId;
+
+  /// The number of times [sendMessage] has actually been called — lets a
+  /// retry test confirm a failed-then-retried send doesn't quietly
+  /// re-upload the file, just resend the chat request.
+  int sendMessageCallCount = 0;
+
+  /// When set, the next [sendMessage] call throws this instead of
+  /// succeeding — mirrors "upload succeeded, but the chat request itself
+  /// failed" so a test can drive `ChatController.retrySend`.
+  Object? sendMessageError;
 
   @override
   Stream<ChatStreamChunk> sendMessage(
     String conversationId,
     String userMessage, {
-    String? fileUrl,
+    int? fileId,
   }) async* {
-    lastReceivedFileUrl = fileUrl;
+    lastReceivedFileId = fileId;
+    sendMessageCallCount++;
+    final error = sendMessageError;
+    if (error != null) throw error;
     final detail = _details[conversationId];
     if (detail == null) throw const ChatConversationNotFoundException();
 
@@ -164,13 +174,6 @@ class _FakeChatRepository implements ChatRepository {
 
     yield ChatStreamChunk.delta(reply.text);
     yield ChatStreamChunk.done(reply);
-  }
-
-  @override
-  Future<StatementAnalysisResult> analyzeStatement(
-    UploadedFileAttachment file,
-  ) {
-    throw UnimplementedError();
   }
 
   @override
@@ -234,7 +237,6 @@ void main() {
       repo,
       FakeStatementFilePickerService(),
       FakeFileUploadRepository(),
-      FinancialDataStore(),
       LocalConversationStore(),
       'test-user',
     );
@@ -347,7 +349,6 @@ void main() {
         repo,
         FakeStatementFilePickerService(),
         FakeFileUploadRepository(),
-        FinancialDataStore(),
         store,
         'test-user',
       );
@@ -696,13 +697,11 @@ void main() {
     ChatController buildControllerWith(
       _FakeChatRepository repo,
       FileUploadRepository uploadRepo,
-      FinancialDataStore store,
     ) {
       return ChatController(
         repo,
         FakeStatementFilePickerService(),
         uploadRepo,
-        store,
         LocalConversationStore(),
         'test-user',
       );
@@ -715,10 +714,9 @@ void main() {
       bytes: Uint8List.fromList([1, 2, 3]),
     );
 
-    test('a successful upload sends the file_url with the chat request and '
+    test('a successful upload sends the file_id with the chat request and '
         'shows one combined message', () async {
       final repo = _FakeChatRepository();
-      final store = FinancialDataStore();
       final controller = buildControllerWith(
         repo,
         _ControllableFileUploadRepository(
@@ -727,11 +725,8 @@ void main() {
             filename: 'statement.pdf',
             size: 1024,
             contentType: 'application/pdf',
-            key: 'statement/1/uuid.pdf',
-            fileUrl: 'https://pub-test.r2.dev/statement/1/uuid.pdf',
           ),
         ),
-        store,
       );
       await _waitUntil(
         () =>
@@ -749,23 +744,11 @@ void main() {
             controller.state.streamingMessageId == null,
       );
 
-      expect(
-        repo.lastReceivedFileUrl,
-        'https://pub-test.r2.dev/statement/1/uuid.pdf',
-      );
+      expect(repo.lastReceivedFileId, 7);
       final userMessage = controller.state.messages.first;
       expect(userMessage.text, 'Summarize this statement.');
       expect(userMessage.fileAttachment?.fileName, 'statement.pdf');
-
-      // The same document now shows up wherever Profile reads its
-      // statement list from — one upload, one shared record.
-      final stored = await store.loadStatements('test-user');
-      expect(stored, hasLength(1));
-      expect(stored.single.id, 'stmt-7');
-      expect(
-        stored.single.fileUrl,
-        'https://pub-test.r2.dev/statement/1/uuid.pdf',
-      );
+      expect(userMessage.fileAttachment?.fileId, 7);
     });
 
     test('an upload failure surfaces attachmentUploadError and never sends '
@@ -776,7 +759,6 @@ void main() {
         _ControllableFileUploadRepository(
           errorToThrow: Exception('network down'),
         ),
-        FinancialDataStore(),
       );
       await _waitUntil(
         () =>
@@ -791,7 +773,7 @@ void main() {
 
       expect(controller.state.attachmentUploadError, isNotNull);
       expect(controller.state.messages, isEmpty);
-      expect(repo.lastReceivedFileUrl, isNull);
+      expect(repo.lastReceivedFileId, isNull);
     });
 
     test(
@@ -803,7 +785,6 @@ void main() {
           _ControllableFileUploadRepository(
             errorToThrow: const FileUploadUnauthorizedException(),
           ),
-          FinancialDataStore(),
         );
         await _waitUntil(
           () =>
@@ -834,16 +815,10 @@ void main() {
             filename: 'statement.pdf',
             size: 1024,
             contentType: 'application/pdf',
-            key: 'statement/1/uuid8.pdf',
-            fileUrl: 'https://pub-test.r2.dev/statement/1/uuid8.pdf',
           ),
           delay: const Duration(milliseconds: 100),
         );
-        final controller = buildControllerWith(
-          repo,
-          uploadRepo,
-          FinancialDataStore(),
-        );
+        final controller = buildControllerWith(repo, uploadRepo);
         await _waitUntil(
           () =>
               controller.state.conversationStatus !=
@@ -863,6 +838,109 @@ void main() {
         await Future.wait([first, second]);
 
         expect(uploadRepo.uploadCallCount, 1);
+      },
+    );
+
+    test('an attachment with no typed text is a complete, sendable message — '
+        'the repository receives the real file_id and an empty message, '
+        'never invented text like "Analyze this document."', () async {
+      final repo = _FakeChatRepository();
+      final controller = buildControllerWith(
+        repo,
+        _ControllableFileUploadRepository(
+          result: const UploadedFile(
+            id: 9,
+            filename: 'statement.pdf',
+            size: 1024,
+            contentType: 'application/pdf',
+          ),
+        ),
+      );
+      await _waitUntil(
+        () =>
+            controller.state.conversationStatus !=
+            ConversationLoadStatus.loading,
+      );
+
+      await controller.sendMessage('', attachment: picked);
+      await _waitUntil(
+        () =>
+            controller.state.messages.length >= 2 &&
+            controller.state.streamingMessageId == null,
+      );
+
+      expect(repo.lastReceivedFileId, 9);
+      final userMessage = controller.state.messages.first;
+      expect(userMessage.text, isEmpty);
+      expect(userMessage.fileAttachment?.fileId, 9);
+    });
+
+    test('sending with no typed text and no attachment does nothing at all — '
+        'no upload, no chat request, no message added', () async {
+      final repo = _FakeChatRepository();
+      final uploadRepo = _ControllableFileUploadRepository();
+      final controller = buildControllerWith(repo, uploadRepo);
+      await _waitUntil(
+        () =>
+            controller.state.conversationStatus !=
+            ConversationLoadStatus.loading,
+      );
+
+      await controller.sendMessage('');
+
+      expect(controller.state.messages, isEmpty);
+      expect(uploadRepo.uploadCallCount, 0);
+      expect(repo.sendMessageCallCount, 0);
+    });
+
+    test(
+      'a chat request that fails after a successful upload can be retried '
+      'without re-uploading, and the retry reuses the exact same file_id',
+      () async {
+        final repo = _FakeChatRepository()
+          ..sendMessageError = Exception('boom');
+        final uploadRepo = _ControllableFileUploadRepository(
+          result: const UploadedFile(
+            id: 11,
+            filename: 'statement.pdf',
+            size: 1024,
+            contentType: 'application/pdf',
+          ),
+        );
+        final controller = buildControllerWith(repo, uploadRepo);
+        await _waitUntil(
+          () =>
+              controller.state.conversationStatus !=
+              ConversationLoadStatus.loading,
+        );
+
+        await controller.sendMessage(
+          'Summarize this statement.',
+          attachment: picked,
+        );
+        await _waitUntil(() => controller.state.messages.isNotEmpty);
+
+        final failedMessage = controller.state.messages.single;
+        expect(failedMessage.sendFailed, isTrue);
+        expect(failedMessage.fileAttachment?.fileId, 11);
+        expect(uploadRepo.uploadCallCount, 1);
+        expect(repo.sendMessageCallCount, 1);
+
+        // The upload already succeeded — retrying must never touch the
+        // upload repository again, only resend the chat request with the
+        // same file_id.
+        repo.sendMessageError = null;
+        await controller.retrySend(failedMessage.id);
+        await _waitUntil(
+          () =>
+              controller.state.messages.length >= 2 &&
+              controller.state.streamingMessageId == null,
+        );
+
+        expect(uploadRepo.uploadCallCount, 1);
+        expect(repo.sendMessageCallCount, 2);
+        expect(repo.lastReceivedFileId, 11);
+        expect(controller.state.messages.first.sendFailed, isFalse);
       },
     );
   });

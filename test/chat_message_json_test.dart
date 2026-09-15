@@ -16,7 +16,7 @@ void main() {
       fileAttachment: UploadedFileAttachment(
         fileName: 'August Statement.pdf',
         extension: 'pdf',
-        fileUrl: 'https://pub-test.r2.dev/statement/4/uuid.pdf',
+        fileId: 4,
         contentType: 'application/pdf',
       ),
     );
@@ -26,10 +26,7 @@ void main() {
     expect(restored.text, 'Summarize this statement.');
     expect(restored.fileAttachment, isNotNull);
     expect(restored.fileAttachment!.fileName, 'August Statement.pdf');
-    expect(
-      restored.fileAttachment!.fileUrl,
-      'https://pub-test.r2.dev/statement/4/uuid.pdf',
-    );
+    expect(restored.fileAttachment!.fileId, 4);
     expect(restored.fileAttachment!.contentType, 'application/pdf');
   });
 

@@ -126,32 +126,3 @@ class ProfileMenuRow extends StatelessWidget {
     );
   }
 }
-
-/// The small pill badge showing a count next to a row, e.g. the number of
-/// uploaded statements.
-class ProfileCountBadge extends StatelessWidget {
-  const ProfileCountBadge({super.key, required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-      ),
-      child: Text(
-        '$count',
-        style: AppTypography.caption.copyWith(
-          color: AppColors.accent,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}

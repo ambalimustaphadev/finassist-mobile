@@ -27,7 +27,7 @@ class FollowUpSuggestions extends StatelessWidget {
       children: [
         for (final suggestion in suggestions)
           Material(
-            color: Colors.transparent,
+            color: AppColors.onboardingMintTint,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: InkWell(
               onTap: () => onSelect(suggestion),
@@ -35,19 +35,16 @@ class FollowUpSuggestions extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
-                  vertical: 6,
+                  vertical: 7,
                 ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(
-                    color: AppColors.accent.withValues(alpha: 0.3),
-                  ),
                 ),
                 child: Text(
                   suggestion,
                   style: AppTypography.caption.copyWith(
-                    color: AppColors.accent,
-                    fontWeight: FontWeight.w500,
+                    color: AppColors.accentDeep,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

@@ -1,80 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/services/greeting_service.dart';
-import '../../../auth/presentation/providers/auth_controller.dart';
-import '../../data/models/quick_action.dart';
-import 'quick_action_chip.dart';
-
-const List<QuickAction> _suggestions = [
-  QuickAction(
-    label: 'How much did I spend?',
-    icon: Icons.query_stats_rounded,
-    prompt: 'How much did I spend this month?',
-  ),
-  QuickAction(
-    label: 'Create a budget',
-    icon: Icons.calculate_rounded,
-    prompt: 'Can you help me create a budget?',
-  ),
-  QuickAction(
-    label: 'Analyze my spending',
-    icon: Icons.pie_chart_rounded,
-    prompt: 'Analyze my spending this month.',
-  ),
-];
+import '../../../../shared/widgets/list_action_card.dart';
+import '../../../profile/presentation/providers/profile_controller.dart';
+import '../../data/prompt_suggestions.dart';
 
 /// Shown in place of the message list for a genuinely new, empty
-/// conversation: a short, personalized greeting and a few tappable
-/// suggestions — never a long canned paragraph.
-class EmptyChatState extends ConsumerWidget {
+/// conversation: a short personalized greeting and a handful of tappable
+/// starter prompts — pulled from a rotating pool so the screen doesn't
+/// look identical (or anchored to one fixed demo scenario) every time.
+/// Disappears the moment the first message is sent — see `ChatScreen`.
+class EmptyChatState extends ConsumerStatefulWidget {
   const EmptyChatState({super.key, required this.onSuggestionSelected});
 
   final ValueChanged<String> onSuggestionSelected;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EmptyChatState> createState() => _EmptyChatStateState();
+}
+
+class _EmptyChatStateState extends ConsumerState<EmptyChatState> {
+  late final List<PromptSuggestion> _suggestions = pickPromptSuggestions();
+
+  @override
+  Widget build(BuildContext context) {
     final firstName = ref.watch(
-      authControllerProvider.select((state) => state.user?.firstName),
+      currentUserIdentityProvider.select((identity) => identity.firstName),
     );
     final greetingWord = GreetingService.greetingFor(DateTime.now());
-    final name = (firstName == null || firstName.trim().isEmpty)
-        ? ''
-        : ', $firstName';
+    final name = firstName.trim().isEmpty ? '' : ' $firstName';
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('$greetingWord$name.', style: AppTypography.greeting),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'What can I help you with?',
-              style: AppTypography.body.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                for (final suggestion in _suggestions)
-                  QuickActionChip(
-                    action: suggestion,
-                    onTap: () => onSuggestionSelected(suggestion.prompt),
-                  ),
-              ],
-            ),
-          ],
-        ),
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xl,
+        AppSpacing.lg,
+        AppSpacing.lg,
       ),
+      children: [
+        Text.rich(
+          TextSpan(
+            style: AppTypography.greeting,
+            children: [
+              TextSpan(text: '$greetingWord,\n'),
+              TextSpan(text: '$name.'.trim()),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text('What would you like to know today?', style: AppTypography.body),
+        const SizedBox(height: AppSpacing.xxl),
+        for (final suggestion in _suggestions) ...[
+          ListActionCard(
+            icon: suggestion.icon,
+            iconColor: suggestion.iconColor,
+            title: suggestion.title,
+            subtitle: suggestion.subtitle,
+            onTap: () => widget.onSuggestionSelected(suggestion.title),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+      ],
     );
   }
 }

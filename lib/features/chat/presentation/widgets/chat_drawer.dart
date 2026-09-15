@@ -6,73 +6,121 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/extensions/formatting_extensions.dart';
 import '../../../../shared/widgets/confirm_action_dialog.dart';
+import '../../../../shared/widgets/user_avatar.dart';
+import '../../../profile/presentation/providers/profile_controller.dart';
+import '../../../shell/presentation/providers/shell_providers.dart';
 import '../../data/models/conversation.dart';
 import '../providers/chat_controller.dart';
 
-/// The chat screen's side menu: brand mark, "+ New conversation", and the
-/// list of recent conversations with meaningful titles and relative dates.
-class ChatDrawer extends ConsumerWidget {
+/// FinAssist's side menu: brand header, "+ New chat", conversation search,
+/// grouped recent conversations, Settings and the signed-in user — reached
+/// from any of Chat/Quick/Tools via their own `Scaffold(drawer:
+/// ChatDrawer())`. All three instances read/write the same
+/// `chatControllerProvider`, so opening a conversation from any of them
+/// behaves identically and always lands on the Chat tab.
+///
+/// A light, premium surface (unlike the rest of the app's chrome) — a
+/// deliberate visual register for "this is FinAssist's own space", the
+/// same way the conversation-history side menu already stood apart before
+/// this redesign, just lighter now instead of dark.
+class ChatDrawer extends ConsumerStatefulWidget {
   const ChatDrawer({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChatDrawer> createState() => _ChatDrawerState();
+}
+
+class _ChatDrawerState extends ConsumerState<ChatDrawer> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() => _query = _searchController.text.trim().toLowerCase());
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final chatState = ref.watch(chatControllerProvider);
     final notifier = ref.read(chatControllerProvider.notifier);
 
-    // The active thread shouldn't also show up in its own recents list.
-    final recents = chatState.conversations
-        .where((c) => c.id != chatState.currentConversationId)
-        .toList();
+    final hasAnyConversations = chatState.conversations.isNotEmpty;
+    final filtered = _query.isEmpty
+        ? chatState.conversations
+        : chatState.conversations
+              .where((c) => c.title.toLowerCase().contains(_query))
+              .toList();
+    final groups = _groupByRecency(filtered);
+
+    final width = MediaQuery.of(context).size.width;
+    final drawerWidth = (width * 0.8).clamp(280.0, 400.0);
 
     return Drawer(
       backgroundColor: AppColors.surface,
-      width: MediaQuery.of(context).size.width * 0.82,
+      width: drawerWidth,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.md,
-              ),
-              child: Text('FinAssist', style: AppTypography.screenTitle),
-            ),
-            _NewConversationRow(
+            _DrawerHeader(onClose: () => Navigator.of(context).pop()),
+            const SizedBox(height: AppSpacing.lg),
+            _NewChatButton(
               onTap: () {
                 notifier.startNewConversation();
+                ref.read(mainTabProvider.notifier).state = chatTabIndex;
                 Navigator.of(context).pop();
               },
             ),
+            const SizedBox(height: AppSpacing.md),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: _ConversationSearchField(controller: _searchController),
+            ),
             const SizedBox(height: AppSpacing.lg),
-            if (recents.isNotEmpty)
+            if (hasAnyConversations)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Text(
-                  'RECENT',
-                  style: AppTypography.caption.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                  ),
-                ),
+                child: Text('Recent', style: AppTypography.sectionHeading),
               ),
             const SizedBox(height: AppSpacing.xs),
             Expanded(
-              child: recents.isEmpty
-                  ? const _NoRecentConversations()
+              child: !hasAnyConversations
+                  ? const _EmptyConversations(
+                      message: 'Your recent conversations will show up here.',
+                    )
+                  : groups.isEmpty
+                  ? const _EmptyConversations(
+                      message: 'No conversations match your search.',
+                    )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(
                         vertical: AppSpacing.xs,
                       ),
-                      itemCount: recents.length,
+                      itemCount: groups.length,
                       itemBuilder: (context, index) {
-                        final conversation = recents[index];
+                        final item = groups[index];
+                        if (item is _GroupHeader) {
+                          return _GroupHeaderLabel(label: item.label);
+                        }
+                        final conversation = (item as _GroupItem).conversation;
                         return _ConversationTile(
                           conversation: conversation,
+                          isActive:
+                              conversation.id ==
+                              chatState.currentConversationId,
                           onTap: () async {
                             Navigator.of(context).pop();
+                            ref.read(mainTabProvider.notifier).state =
+                                chatTabIndex;
                             await notifier.openConversation(conversation.id);
                           },
                           onDelete: () =>
@@ -81,11 +129,58 @@ class ChatDrawer extends ConsumerWidget {
                       },
                     ),
             ),
+            Divider(height: 1, color: AppColors.borderSubtle),
+            // _SettingsRow(onTap: () => _openProfile(context, ref)),
+            _DrawerProfileFooter(onTap: () => _openProfile(context, ref)),
           ],
         ),
       ),
     );
   }
+
+  void _openProfile(BuildContext context, WidgetRef ref) {
+    Navigator.of(context).pop();
+    ref.read(mainTabProvider.notifier).state = profileTabIndex;
+  }
+}
+
+/// A group header ("Today"/"Yesterday"/"Earlier") or a conversation row,
+/// flattened into one list so [ListView.builder] can lazily build both —
+/// simpler than a nested `SliverList` per group for what's normally a
+/// short list.
+sealed class _RecencyListItem {}
+
+class _GroupHeader extends _RecencyListItem {
+  _GroupHeader(this.label);
+  final String label;
+}
+
+class _GroupItem extends _RecencyListItem {
+  _GroupItem(this.conversation);
+  final Conversation conversation;
+}
+
+/// Buckets [conversations] (already sorted newest-first) into Today /
+/// Yesterday / Earlier groups, reusing [DateFormatting.toRelativeConversationDate]
+/// (rather than re-deriving day-difference math here) purely to classify
+/// which bucket each one falls into.
+List<_RecencyListItem> _groupByRecency(List<Conversation> conversations) {
+  final items = <_RecencyListItem>[];
+  String? currentGroup;
+  for (final conversation in conversations) {
+    final relative = conversation.updatedAt.toRelativeConversationDate();
+    final group = switch (relative) {
+      'Today' => 'Today',
+      'Yesterday' => 'Yesterday',
+      _ => 'Earlier',
+    };
+    if (group != currentGroup) {
+      items.add(_GroupHeader(group));
+      currentGroup = group;
+    }
+    items.add(_GroupItem(conversation));
+  }
+  return items;
 }
 
 Future<void> _handleDelete(
@@ -104,35 +199,186 @@ Future<void> _handleDelete(
   await notifier.deleteConversation(conversation.id);
 }
 
-class _NewConversationRow extends StatelessWidget {
-  const _NewConversationRow({required this.onTap});
+class _DrawerHeader extends StatelessWidget {
+  const _DrawerHeader({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.sm,
+        0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Fin',
+                        style: AppTypography.greeting.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'Assist',
+                        style: AppTypography.greeting.copyWith(
+                          color: AppColors.accentStrong,
+                        ),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Semantics(
+              //   button: true,
+              //   label: 'Close menu',
+              //   child: InkWell(
+              //     customBorder: const CircleBorder(),
+              //     onTap: onClose,
+              //     child: const Padding(
+              //       padding: EdgeInsets.all(AppSpacing.sm),
+              //       child: Icon(
+              //         Icons.close_rounded,
+              //         color: AppColors.textSecondary,
+              //         size: 22,
+              //       ),
+              //     ),
+              //   ),
+              // ),
+            ],
+          ),
+          Text(
+            'Your AI partner for a healthier financial life.',
+            style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NewChatButton extends StatelessWidget {
+  const _NewChatButton({required this.onTap});
 
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'New conversation',
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.add_rounded, color: AppColors.accent, size: 20),
-              const SizedBox(width: AppSpacing.md),
-              Text(
-                'New conversation',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.accent,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Material(
+        color: AppColors.onboardingMintTint,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppSpacing.sm,
+              horizontal: AppSpacing.md,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: const BoxDecoration(
+                    color: AppColors.accentStrong,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.add_rounded,
+                    color: Colors.white,
+                    size: 17,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'New chat',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConversationSearchField extends StatelessWidget {
+  const _ConversationSearchField({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      textField: true,
+      label: 'Search conversations',
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.borderSubtle),
+        ),
+        child: TextField(
+          controller: controller,
+          textInputAction: TextInputAction.search,
+          style: AppTypography.body.copyWith(color: AppColors.textPrimary),
+          decoration: InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            hintText: 'Search conversations...',
+            hintStyle: AppTypography.body.copyWith(color: AppColors.textMuted),
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              color: AppColors.textMuted,
+              size: 20,
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupHeaderLabel extends StatelessWidget {
+  const _GroupHeaderLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.xs,
+      ),
+      child: Text(
+        label,
+        style: AppTypography.caption.copyWith(
+          color: AppColors.textMuted,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -142,79 +388,103 @@ class _NewConversationRow extends StatelessWidget {
 class _ConversationTile extends StatelessWidget {
   const _ConversationTile({
     required this.conversation,
+    required this.isActive,
     required this.onTap,
     required this.onDelete,
   });
 
   final Conversation conversation;
+  final bool isActive;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: conversation.title,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+    final relative = conversation.updatedAt.toRelativeConversationDate();
+    final timeLabel = relative == 'Today'
+        ? conversation.updatedAt.toTimeOfDay()
+        : relative;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 2,
+      ),
+      child: Semantics(
+        button: true,
+        label: conversation.title,
+        selected: isActive,
+        child: Material(
+          color: isActive ? AppColors.onboardingMintTint : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: isActive
+                        ? AppColors.accentDeep
+                        : AppColors.textMuted,
+                    size: 18,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
                       conversation.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodyMedium,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      conversation.updatedAt.toRelativeConversationDate(),
-                      style: AppTypography.caption,
-                    ),
-                  ],
-                ),
-              ),
-              Semantics(
-                button: true,
-                label: 'Conversation options',
-                child: PopupMenuButton<_ConversationAction>(
-                  icon: const Icon(
-                    Icons.more_vert_rounded,
-                    color: AppColors.textMuted,
-                    size: 18,
-                  ),
-                  color: AppColors.surfaceElevated,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    side: const BorderSide(color: AppColors.border),
-                  ),
-                  onSelected: (action) {
-                    if (action == _ConversationAction.delete) onDelete();
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: _ConversationAction.delete,
-                      child: Text(
-                        'Delete',
-                        style: AppTypography.body.copyWith(
-                          color: AppColors.negative,
-                        ),
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    timeLabel,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  Semantics(
+                    button: true,
+                    label: 'Conversation options',
+                    child: PopupMenuButton<_ConversationAction>(
+                      icon: const Icon(
+                        Icons.more_vert_rounded,
+                        color: AppColors.textMuted,
+                        size: 18,
+                      ),
+                      color: AppColors.surface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        side: const BorderSide(color: AppColors.border),
+                      ),
+                      onSelected: (action) {
+                        if (action == _ConversationAction.delete) onDelete();
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: _ConversationAction.delete,
+                          child: Text(
+                            'Delete',
+                            style: AppTypography.body.copyWith(
+                              color: AppColors.negative,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -224,16 +494,151 @@ class _ConversationTile extends StatelessWidget {
 
 enum _ConversationAction { delete }
 
-class _NoRecentConversations extends StatelessWidget {
-  const _NoRecentConversations();
+class _EmptyConversations extends StatelessWidget {
+  const _EmptyConversations({required this.message});
+
+  final String message;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Text(
-        'Your recent conversations will show up here.',
-        style: AppTypography.body,
+        message,
+        style: AppTypography.body.copyWith(color: AppColors.textMuted),
+      ),
+    );
+  }
+}
+
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Settings',
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.settings_outlined,
+                color: AppColors.textSecondary,
+                size: 19,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  'Settings',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DrawerProfileFooter extends ConsumerWidget {
+  const _DrawerProfileFooter({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final identity = ref.watch(currentUserIdentityProvider);
+    final pictureUrl = ref.watch(
+      profileControllerProvider.select((s) => s.profile?.profilePictureUrl),
+    );
+    final name = '${identity.firstName} ${identity.lastName}'.trim();
+    final subtitle = identity.username.isNotEmpty
+        ? '@${identity.username}'
+        : identity.email;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
+      child: Semantics(
+        button: true,
+        label: 'Open profile',
+        child: Material(
+          color: AppColors.onboardingMintTint,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                children: [
+                  UserAvatar(
+                    imageUrl: pictureUrl,
+                    size: 38,
+                    onImageError: pictureUrl == null
+                        ? null
+                        : () => WidgetsBinding.instance.addPostFrameCallback(
+                            (_) => ref
+                                .read(profileControllerProvider.notifier)
+                                .refreshIfPictureUrlStale(pictureUrl),
+                          ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name.isEmpty ? 'FinAssist user' : name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (subtitle.isNotEmpty)
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textMuted,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

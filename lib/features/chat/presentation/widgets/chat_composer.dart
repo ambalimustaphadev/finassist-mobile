@@ -18,9 +18,17 @@ import 'file_attachment_card.dart';
 /// [ChatController.sendMessage] together (see its doc comment for the
 /// upload-then-chat sequencing).
 class ChatComposer extends ConsumerStatefulWidget {
-  const ChatComposer({super.key, required this.onSend});
+  const ChatComposer({
+    super.key,
+    required this.onSend,
+    this.hasMessages = false,
+  });
 
   final void Function(String text, PickedFile? attachment) onSend;
+
+  /// Whether the active conversation already has messages — swaps the
+  /// placeholder from an opening invitation to a follow-up prompt.
+  final bool hasMessages;
 
   @override
   ConsumerState<ChatComposer> createState() => _ChatComposerState();
@@ -178,7 +186,9 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     isCollapsed: true,
-                    hintText: 'Ask FinAssist...',
+                    hintText: widget.hasMessages
+                        ? 'Ask a follow-up...'
+                        : 'Ask FinAssist anything...',
                     hintStyle: AppTypography.body.copyWith(
                       color: AppColors.textMuted,
                     ),

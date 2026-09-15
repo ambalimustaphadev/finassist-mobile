@@ -12,11 +12,13 @@ import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
 import 'icon_badge.dart';
 
-/// Pushes the shared in-app document viewer — the one place Chat and
-/// Profile → Documents both open an uploaded file, so there's a single
-/// PDF/image viewing implementation rather than two. [fileUrl] is the R2
-/// URL exactly as returned by `POST /api/files/upload`; nothing is
-/// re-uploaded or re-fetched from anywhere else.
+/// Pushes the shared in-app document viewer — a document belongs to the
+/// conversation it was uploaded in, so this is opened only from a chat
+/// message's attachment card. [fileUrl] is a fresh, short-lived signed URL
+/// obtained from `GET /api/files/<id>/view` immediately before this is
+/// called (see `_openAttachment` in `chat_bubble.dart`) — never the
+/// document's permanent identity, and never stored or reused once it
+/// expires.
 Future<void> openDocumentViewer(
   BuildContext context, {
   required String? fileUrl,

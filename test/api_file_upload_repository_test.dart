@@ -87,7 +87,9 @@ void main() {
             'filename': 'statement.pdf',
             'size': 83318,
             'content_type': 'application/pdf',
-            'key': 'statements/4/uuid.pdf',
+            'document_type': 'bank_statement',
+            'processing_status': 'pending',
+            'created_at': '2026-01-01T10:00:00Z',
           },
         }),
         201,
@@ -100,7 +102,6 @@ void main() {
     expect(uploaded.filename, 'statement.pdf');
     expect(uploaded.size, 83318);
     expect(uploaded.contentType, 'application/pdf');
-    expect(uploaded.key, 'statements/4/uuid.pdf');
   });
 
   test('401 throws FileUploadUnauthorizedException', () async {

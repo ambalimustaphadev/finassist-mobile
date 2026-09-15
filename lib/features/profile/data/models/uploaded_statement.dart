@@ -1,10 +1,12 @@
 /// A financial document (a bank statement today; investment/loan/insurance
-/// documents and other financial reports are the same shape, per the
-/// Documents page's broader remit) the user has uploaded, as tracked
-/// locally on this device. There is no backend endpoint yet for listing a
-/// user's documents server-side (see `ProfileFinanceController`'s doc
-/// comment) — this is real data about what actually happened on this
-/// device, not a placeholder.
+/// documents and other financial reports are the same shape) the user has
+/// uploaded within a chat conversation — mirrors one item from the real,
+/// backend-authoritative `GET /api/files` response.
+///
+/// Financial documents are private in Cloudflare R2 — this model never
+/// carries a permanent/public URL. [backendId] (the real `UploadFile.id`,
+/// i.e. `file_id`) is the only identity needed to delete a document or to
+/// request a fresh, short-lived view URL from `GET /api/files/<id>/view`.
 class UploadedStatement {
   const UploadedStatement({
     required this.id,
@@ -12,21 +14,19 @@ class UploadedStatement {
     required this.uploadedAt,
     this.periodStart,
     this.periodEnd,
-    this.fileUrl,
     this.contentType,
+    this.backendId,
   });
 
   final String id;
+
+  /// The backend's real `UploadFile.id` (`file_id`) — what
+  /// `DELETE /api/files/<id>` and the view endpoint need.
+  final int? backendId;
   final String fileName;
   final DateTime uploadedAt;
   final DateTime? periodStart;
   final DateTime? periodEnd;
-
-  /// The R2-accessible URL returned by `POST /api/files/upload` —
-  /// cached locally so tapping this document can open it (via the shared
-  /// document viewer) without a separate backend round trip. Null for
-  /// documents uploaded before this field existed.
-  final String? fileUrl;
 
   /// The backend's reported MIME type, when known — lets the document
   /// viewer pick a renderer without guessing from the filename alone.
@@ -34,31 +34,22 @@ class UploadedStatement {
   /// falls back to the filename's extension in that case.
   final String? contentType;
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'fileName': fileName,
-    'uploadedAt': uploadedAt.toIso8601String(),
-    'periodStart': periodStart?.toIso8601String(),
-    'periodEnd': periodEnd?.toIso8601String(),
-    'fileUrl': fileUrl,
-    'contentType': contentType,
-  };
-
-  factory UploadedStatement.fromJson(Map<String, dynamic> json) {
+  /// Mirrors `_file_to_dict` in the backend's `file_routes.py` — one item
+  /// from the real, paginated `GET /api/files` response.
+  factory UploadedStatement.fromFileJson(Map<String, dynamic> json) {
+    final id = json['id'] as int;
     return UploadedStatement(
-      id: json['id'] as String,
-      fileName: (json['fileName'] as String?) ?? 'Statement',
-      uploadedAt:
-          DateTime.tryParse(json['uploadedAt']?.toString() ?? '') ??
-          DateTime.now(),
-      periodStart: json['periodStart'] == null
+      id: 'stmt-$id',
+      backendId: id,
+      fileName: (json['filename'] as String?) ?? 'Document',
+      uploadedAt: DateTime.parse(json['created_at'] as String),
+      periodStart: json['financial_period_start'] == null
           ? null
-          : DateTime.tryParse(json['periodStart'].toString()),
-      periodEnd: json['periodEnd'] == null
+          : DateTime.parse(json['financial_period_start'] as String),
+      periodEnd: json['financial_period_end'] == null
           ? null
-          : DateTime.tryParse(json['periodEnd'].toString()),
-      fileUrl: json['fileUrl'] as String?,
-      contentType: json['contentType'] as String?,
+          : DateTime.parse(json['financial_period_end'] as String),
+      contentType: json['content_type'] as String?,
     );
   }
 }

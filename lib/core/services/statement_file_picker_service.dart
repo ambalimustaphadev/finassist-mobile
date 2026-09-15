@@ -52,23 +52,23 @@ abstract class StatementFilePickerService {
 class FilePickerStatementService implements StatementFilePickerService {
   @override
   Future<PickedFile?> pickStatementFile() async {
-    final result = await FilePicker.platform.pickFiles(
+    final file = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: supportedStatementExtensions,
-      // Guarantees `bytes` is populated even on the rare platform/device
-      // combination where `path` comes back null, so a real upload never
-      // has nothing to read from.
-      withData: true,
     );
-    if (result == null || result.files.isEmpty) return null;
+    if (file == null) return null;
 
-    final file = result.files.single;
+    // Guarantees `bytes` is populated even on the rare platform/device
+    // combination where `path` comes back null, so a real upload never
+    // has nothing to read from.
+    final bytes = file.path == null ? await file.readAsBytes() : null;
+
     return PickedFile(
       name: file.name,
       extension: file.extension,
-      sizeBytes: file.size,
+      sizeBytes: file.lengthSync(),
       path: file.path,
-      bytes: file.bytes,
+      bytes: bytes,
     );
   }
 }

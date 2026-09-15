@@ -6,22 +6,21 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/extensions/formatting_extensions.dart';
+import '../../../../shared/models/uploaded_file_attachment.dart';
 import '../../../../shared/widgets/ai_avatar.dart';
 import '../../../../shared/widgets/document_viewer_screen.dart';
+import '../../../profile/presentation/providers/profile_finance_controller.dart';
 import '../../data/models/chat_message.dart';
 import '../providers/chat_controller.dart';
-import 'analysis_error_card.dart';
 import 'file_attachment_card.dart';
-import 'financial_breakdown_card.dart';
 import 'follow_up_suggestions.dart';
 import 'message_actions_row.dart';
 import 'message_feedback_row.dart';
-import 'recurring_payments_card.dart';
-import 'upload_statement_button.dart';
 
 /// Renders a single [ChatMessage] as a bubble, aligned left (AI) or right
-/// (user), with any embedded rich content, follow-ups, actions and a
-/// timestamp.
+/// (user), with its optional file attachment, follow-ups, actions and a
+/// timestamp — every AI response is a plain chat message, never a
+/// fabricated financial dashboard card.
 class ChatBubble extends ConsumerWidget {
   const ChatBubble({
     super.key,
@@ -42,15 +41,7 @@ class ChatBubble extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pendingAttachmentId = ref
-        .watch(chatControllerProvider)
-        .pendingAttachmentMessageId;
-
     final notifier = ref.read(chatControllerProvider.notifier);
-
-    final isPendingAttachment =
-        message.messageType == ChatMessageType.fileAttachment &&
-        message.id == pendingAttachmentId;
 
     return Column(
       crossAxisAlignment: _isUser
@@ -78,42 +69,29 @@ class ChatBubble extends ConsumerWidget {
                       ? CrossAxisAlignment.end
                       : CrossAxisAlignment.start,
                   children: [
-                    // --------------------------------------------
-                    // FILE ATTACHMENT
-                    // --------------------------------------------
-                    if (message.messageType == ChatMessageType.fileAttachment &&
-                        message.fileAttachment != null)
+                    // A file the user attached to this turn, shown as a
+                    // compact tag above the text bubble rather than
+                    // replacing it — the document itself belongs to this
+                    // conversation, not a separate Documents section.
+                    if (message.fileAttachment != null) ...[
                       FileAttachmentCard(
                         attachment: message.fileAttachment!,
-                        onRemove: isPendingAttachment
-                            ? () => notifier.removeAttachment(message.id)
-                            : null,
-                      )
-                    // --------------------------------------------
-                    // NORMAL MESSAGE (optionally with a file the user
-                    // attached to this turn from the composer, shown as
-                    // a compact tag above the text bubble rather than
-                    // replacing it — unlike the standalone FILE
-                    // ATTACHMENT case above, this message has real text
-                    // alongside its file).
-                    // --------------------------------------------
-                    else if (message.messageType !=
-                        ChatMessageType.analysisError) ...[
-                      if (message.fileAttachment != null) ...[
-                        FileAttachmentCard(
-                          attachment: message.fileAttachment!,
-                          onTap: message.fileAttachment!.fileUrl == null
-                              ? null
-                              : () => openDocumentViewer(
-                                  context,
-                                  fileUrl: message.fileAttachment!.fileUrl,
-                                  filename: message.fileAttachment!.fileName,
-                                  contentType:
-                                      message.fileAttachment!.contentType,
-                                ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                      ],
+                        onTap: message.fileAttachment!.fileId == null
+                            ? null
+                            : () => _openAttachment(
+                                context,
+                                ref,
+                                message.fileAttachment!,
+                              ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                    ],
+                    // A file-only message (no typed text — the user
+                    // attached a document and sent it as-is) has nothing
+                    // to show here: the attachment card above already
+                    // represents the whole message, so no empty bubble
+                    // is rendered beneath it.
+                    if (message.text.trim().isNotEmpty)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.lg,
@@ -121,8 +99,11 @@ class ChatBubble extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: _isUser
-                              ? AppColors.accentStrong
-                              : AppColors.surfaceElevated,
+                              ? AppColors.surfaceHighlight
+                              : AppColors.surface,
+                          border: _isUser
+                              ? null
+                              : Border.all(color: AppColors.borderSubtle),
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(AppRadius.lg),
                             topRight: const Radius.circular(AppRadius.lg),
@@ -133,6 +114,15 @@ class ChatBubble extends ConsumerWidget {
                               _isUser ? 4 : AppRadius.lg,
                             ),
                           ),
+                          boxShadow: _isUser
+                              ? null
+                              : [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.04),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                         ),
 
                         // User messages stay as normal Text.
@@ -149,7 +139,7 @@ class ChatBubble extends ConsumerWidget {
                             ? Text(
                                 message.text,
                                 style: AppTypography.chatMessage.copyWith(
-                                  color: Colors.black87,
+                                  color: AppColors.textPrimary,
                                 ),
                               )
                             : MarkdownBody(
@@ -243,59 +233,6 @@ class ChatBubble extends ConsumerWidget {
                                   ),
                                 ),
                               ),
-                      ),
-                    ]
-                    // --------------------------------------------
-                    // ANALYSIS ERROR
-                    // --------------------------------------------
-                    else
-                      _AnalysisErrorBubble(message: message),
-
-                    // --------------------------------------------
-                    // FINANCIAL BREAKDOWN
-                    // --------------------------------------------
-                    if (message.messageType ==
-                            ChatMessageType.categoryBreakdown &&
-                        message.categoryBreakdown != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      FinancialBreakdownCard(
-                        breakdown: message.categoryBreakdown!,
-                      ),
-                    ],
-
-                    // --------------------------------------------
-                    // RECURRING PAYMENTS
-                    // --------------------------------------------
-                    if (message.messageType ==
-                            ChatMessageType.recurringPayments &&
-                        message.recurringPayments != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      RecurringPaymentsCard(
-                        payments: message.recurringPayments!,
-                      ),
-                    ],
-
-                    // --------------------------------------------
-                    // UPLOAD STATEMENT
-                    // --------------------------------------------
-                    if (message.messageType ==
-                        ChatMessageType.uploadPrompt) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      UploadStatementButton(
-                        onTap: notifier.pickAndUploadStatement,
-                      ),
-                    ],
-
-                    // --------------------------------------------
-                    // ANALYSIS ERROR ACTIONS
-                    // --------------------------------------------
-                    if (message.messageType == ChatMessageType.analysisError)
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.sm),
-                        child: AnalysisErrorCard(
-                          onTryAgain: notifier.retryAnalysis,
-                          onChooseAnother: notifier.pickAndUploadStatement,
-                        ),
                       ),
 
                     // --------------------------------------------
@@ -391,6 +328,51 @@ class ChatBubble extends ConsumerWidget {
   }
 }
 
+/// Opens a tapped [FileAttachmentCard]'s document: the document is private
+/// in R2, so this always asks the backend for a fresh, short-lived signed
+/// URL first (never reusing/storing one) and only opens the shared viewer
+/// once that succeeds. Shows a blocking spinner for the (usually brief)
+/// round trip and a friendly error if it fails, rather than a raw
+/// exception message.
+Future<void> _openAttachment(
+  BuildContext context,
+  WidgetRef ref,
+  UploadedFileAttachment attachment,
+) async {
+  final fileId = attachment.fileId;
+  if (fileId == null) return;
+
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+
+  String signedUrl;
+  try {
+    signedUrl = await ref.read(documentRepositoryProvider).getViewUrl(fileId);
+  } catch (_) {
+    if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Couldn't open this document. Please try again."),
+        ),
+      );
+    }
+    return;
+  }
+
+  if (!context.mounted) return;
+  Navigator.of(context, rootNavigator: true).pop();
+  await openDocumentViewer(
+    context,
+    fileUrl: signedUrl,
+    filename: attachment.fileName,
+    contentType: attachment.contentType,
+  );
+}
+
 /// Shown beneath a user message that failed to send, in place of the
 /// normal timestamp — an honest "this didn't go through" state with a way
 /// to fix it, instead of silently pretending it sent.
@@ -416,54 +398,6 @@ class _FailedToSendRow extends StatelessWidget {
           Text(
             'Failed to send · Retry',
             style: AppTypography.caption.copyWith(color: AppColors.negative),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Error bubble displayed when statement analysis fails.
-class _AnalysisErrorBubble extends StatelessWidget {
-  const _AnalysisErrorBubble({required this.message});
-
-  final ChatMessage message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(4),
-          topRight: Radius.circular(AppRadius.lg),
-          bottomLeft: Radius.circular(AppRadius.lg),
-          bottomRight: Radius.circular(AppRadius.lg),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            size: 18,
-            color: AppColors.negative,
-          ),
-
-          const SizedBox(width: AppSpacing.sm),
-
-          Flexible(
-            child: Text(
-              message.text,
-              style: AppTypography.chatMessage.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
           ),
         ],
       ),

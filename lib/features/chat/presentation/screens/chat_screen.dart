@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../core/extensions/formatting_extensions.dart';
 import '../../../../core/services/statement_file_picker_service.dart';
 import '../../../../shared/widgets/ai_avatar.dart';
 import '../../../../shared/widgets/fade_slide_in.dart';
@@ -20,9 +19,11 @@ import '../widgets/conversation_load_banner.dart';
 import '../widgets/empty_chat_state.dart';
 import '../widgets/quick_actions_row.dart';
 import '../widgets/scroll_to_latest_button.dart';
-import '../widgets/statement_context_bar.dart';
 import '../widgets/typing_indicator.dart';
 
+/// FinAssist's landing tab: a workspace, not a single session with an
+/// "end" action. Always shell-hosted (the Chat tab of [MainShellScreen]),
+/// never pushed as its own route.
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
 
@@ -64,7 +65,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   /// Positions the view at the latest message the moment this screen
   /// becomes active. Covers returning to an already-loaded conversation
-  /// (e.g. Dashboard -> FinAssist) — `chatControllerProvider` is a single,
+  /// (e.g. Profile -> Chat) — `chatControllerProvider` is a single,
   /// screen-independent instance, so if it was already `loaded` before
   /// this screen mounted, no `ChatState` change occurs for
   /// `_handleChatStateChange` to react to, and the fresh `ScrollController`
@@ -155,11 +156,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
-  void _handleAttach() {
-    FocusScope.of(context).unfocus();
-    ref.read(chatControllerProvider.notifier).pickAndUploadStatement();
-  }
-
   void _handleSendMessage(String text) {
     ref.read(chatControllerProvider.notifier).sendMessage(text);
   }
@@ -175,7 +171,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _handleQuickAction(QuickAction action) {
     FocusScope.of(context).unfocus();
     if (action.triggersUpload) {
-      _handleAttach();
+      ref.read(chatControllerProvider.notifier).pickAndUploadStatement();
       return;
     }
     _handleSendMessage(action.prompt);
@@ -311,14 +307,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   children: [
                     if (chatState.messages.isNotEmpty) ...[
                       QuickActionsRow(
-                        actions: quickActionsFor(
-                          hasFinancialData: chatState.hasFinancialData,
-                        ),
+                        actions: quickActions,
                         onSelect: _handleQuickAction,
                       ),
                       const SizedBox(height: AppSpacing.md),
                     ],
-                    ChatComposer(onSend: _handleComposerSend),
+                    ChatComposer(
+                      onSend: _handleComposerSend,
+                      hasMessages: chatState.messages.isNotEmpty,
+                    ),
                   ],
                 ),
               ),
@@ -351,12 +348,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildMessageList(ChatState chatState) {
-    final hasStatementContext =
-        chatState.hasFinancialData &&
-        chatState.statementFileName != null &&
-        chatState.statementPeriodStart != null &&
-        chatState.statementPeriodEnd != null;
-
     final lastAssistantIndex = chatState.messages.lastIndexWhere(
       (m) => m.role == ChatMessageRole.assistant,
     );
@@ -374,19 +365,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               AppSpacing.lg,
             ),
             children: [
-              if (hasStatementContext) ...[
-                FadeSlideIn(
-                  key: ValueKey('statement-${chatState.statementFileName}'),
-                  child: StatementContextBar(
-                    fileName: chatState.statementFileName!,
-                    periodLabel: formatDateRange(
-                      chatState.statementPeriodStart!,
-                      chatState.statementPeriodEnd!,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-              ],
               for (var i = 0; i < chatState.messages.length; i++) ...[
                 KeyedSubtree(
                   key: _keyFor(chatState.messages[i].id),
@@ -439,9 +417,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   bool _isSubstantiveAssistantMessage(ChatMessage message) {
     return message.role == ChatMessageRole.assistant &&
-        (message.messageType == ChatMessageType.text ||
-            message.messageType == ChatMessageType.categoryBreakdown ||
-            message.messageType == ChatMessageType.recurringPayments);
+        message.text.trim().isNotEmpty;
   }
 }
 

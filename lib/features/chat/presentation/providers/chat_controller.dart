@@ -8,8 +8,6 @@ import '../../../../core/constants/api_config.dart';
 import '../../../../core/services/statement_file_picker_service.dart';
 import '../../../../shared/models/uploaded_file_attachment.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
-import '../../../profile/data/local/financial_data_store.dart';
-import '../../../profile/data/models/uploaded_statement.dart';
 import '../../../profile/data/repositories/api_file_upload_repository.dart';
 import '../../../profile/data/repositories/file_upload_repository.dart';
 import '../../data/local/local_conversation_store.dart';
@@ -20,8 +18,23 @@ import 'chat_state.dart';
 
 /// Swap this provider's override for tests (e.g. `MockChatRepository`); the
 /// chat screen itself never changes.
+///
+/// [ApiChatRepository] is wired here (rather than reimplementing its own
+/// refresh/session logic) to the *existing* authentication mechanism: a
+/// 401 mid-conversation transparently retries once via
+/// `AuthRepository.refreshAccessToken()` — the same refresh call
+/// `restoreSession()` already uses — and, only if that refresh
+/// definitively fails, hands off to the existing
+/// `AuthController.logout()` so the app's session state actually
+/// transitions to unauthenticated instead of silently staying
+/// "authenticated" while chat keeps failing.
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
-  return ApiChatRepository(baseUrl: apiBaseUrl);
+  final authRepository = ref.watch(authRepositoryProvider);
+  return ApiChatRepository(
+    baseUrl: apiBaseUrl,
+    refreshAccessToken: authRepository.refreshAccessToken,
+    onSessionExpired: () => ref.read(authControllerProvider.notifier).logout(),
+  );
 });
 
 /// Swap for a fake in tests, or leave as-is in production — it's the only
@@ -40,15 +53,6 @@ final statementFilePickerServiceProvider = Provider<StatementFilePickerService>(
 /// pipeline, not two.
 final fileUploadRepositoryProvider = Provider<FileUploadRepository>((ref) {
   return ApiFileUploadRepository(baseUrl: apiBaseUrl);
-});
-
-/// Swap for a fake in tests. Defined here for the same reason as
-/// [fileUploadRepositoryProvider]: both Chat's composer attachment flow
-/// and Profile's "Uploaded statements" screen record into the same local
-/// cache, so a document uploaded from either one shows up in both —
-/// there's no separate "Chat files" vs. "Profile files" list.
-final financialDataStoreProvider = Provider<FinancialDataStore>((ref) {
-  return FinancialDataStore();
 });
 
 /// Local (on-device) cache of conversations/messages — see
@@ -71,17 +75,11 @@ final chatControllerProvider = StateNotifierProvider<ChatController, ChatState>(
       ref.watch(chatRepositoryProvider),
       ref.watch(statementFilePickerServiceProvider),
       ref.watch(fileUploadRepositoryProvider),
-      ref.watch(financialDataStoreProvider),
       ref.watch(localConversationStoreProvider),
       userId,
     );
   },
 );
-
-/// How long a just-attached file stays cancelable before analysis begins
-/// automatically. Long enough to comfortably tap "×", short enough that the
-/// conversation still feels responsive.
-const _attachmentConfirmWindow = Duration(milliseconds: 900);
 
 /// How long to pause between each progressively-revealed chunk of an
 /// assistant response (see `ChatController._streamAssistantReply`). Purely
@@ -111,7 +109,6 @@ class ChatController extends StateNotifier<ChatState> {
     this._repository,
     this._filePicker,
     this._uploadRepository,
-    this._financialDataStore,
     this._store,
     this._userId,
   ) : super(const ChatState()) {
@@ -121,7 +118,6 @@ class ChatController extends StateNotifier<ChatState> {
   final ChatRepository _repository;
   final StatementFilePickerService _filePicker;
   final FileUploadRepository _uploadRepository;
-  final FinancialDataStore _financialDataStore;
   final LocalConversationStore _store;
   final String _userId;
 
@@ -235,19 +231,6 @@ class ChatController extends StateNotifier<ChatState> {
 
   Future<void> retryLoad() => _bootstrap();
 
-  /// Clears the active conversation's financial-data context — called when
-  /// the user deletes their stored financial data from Profile, so the
-  /// assistant doesn't keep referencing a statement that no longer exists.
-  /// Only affects in-memory/session state; it doesn't touch messages
-  /// already in the conversation.
-  void clearFinancialDataContext() {
-    if (!state.hasFinancialData) return;
-    state = state.copyWith(
-      hasFinancialData: false,
-      clearStatementContext: true,
-    );
-  }
-
   /// Starts a fresh thread: clears the current messages and shows the
   /// empty state. No backend call happens here — the conversation is only
   /// created (via `POST /api/conversations`) once the user actually sends
@@ -272,11 +255,8 @@ class ChatController extends StateNotifier<ChatState> {
       currentConversationId: conversationId,
       conversationStatus: ConversationLoadStatus.loading,
       messages: const [],
-      hasFinancialData: false,
       clearTypingLabel: true,
       clearStreamingMessageId: true,
-      clearPendingAttachment: true,
-      clearLastFailedAttachment: true,
     );
     try {
       final detail = await _repository.getConversation(conversationId);
@@ -362,7 +342,7 @@ class ChatController extends StateNotifier<ChatState> {
     if (_isUploadingAttachment) return;
 
     UploadedFileAttachment? fileAttachment;
-    String? fileUrl;
+    int? fileId;
 
     if (attachment != null) {
       _isUploadingAttachment = true;
@@ -375,29 +355,13 @@ class ChatController extends StateNotifier<ChatState> {
         final file = await resolvePickedFile(attachment);
         if (file == null) throw Exception('Could not read the picked file.');
         final uploaded = await _uploadRepository.uploadFile(file);
-        fileUrl = uploaded.fileUrl;
+        fileId = uploaded.id;
         fileAttachment = UploadedFileAttachment(
           fileName: uploaded.filename,
           extension: attachment.extension,
           sizeBytes: uploaded.size,
-          fileUrl: uploaded.fileUrl,
+          fileId: uploaded.id,
           contentType: uploaded.contentType,
-        );
-        // The document is now on the server regardless of whether the
-        // chat request below succeeds — record it in the same local
-        // cache Profile's "Uploaded statements" reads from immediately,
-        // rather than only if the AI reply also goes through.
-        unawaited(
-          _financialDataStore.addStatement(
-            _userId,
-            UploadedStatement(
-              id: 'stmt-${uploaded.id}',
-              fileName: uploaded.filename,
-              uploadedAt: DateTime.now(),
-              fileUrl: uploaded.fileUrl,
-              contentType: uploaded.contentType,
-            ),
-          ),
         );
       } on FileUploadUnauthorizedException {
         state = state.copyWith(
@@ -425,7 +389,7 @@ class ChatController extends StateNotifier<ChatState> {
       text: trimmed,
       timestamp: DateTime.now(),
       fileAttachment: fileAttachment,
-      pendingFileUrl: fileUrl,
+      pendingFileId: fileId,
     );
 
     state = state.copyWith(
@@ -490,7 +454,7 @@ class ChatController extends StateNotifier<ChatState> {
     await _streamAssistantReply(
       conversationId: conversationId,
       userMessage: userMessage.text,
-      fileUrl: userMessage.pendingFileUrl,
+      fileId: userMessage.pendingFileId,
       onFailure: () => _markSendFailed(userMessage.id),
     );
   }
@@ -554,7 +518,7 @@ class ChatController extends StateNotifier<ChatState> {
   Future<void> _streamAssistantReply({
     required String conversationId,
     required String userMessage,
-    String? fileUrl,
+    int? fileId,
     VoidCallback? onFailure,
   }) async {
     final assistantId = 'ai-${DateTime.now().microsecondsSinceEpoch}';
@@ -607,10 +571,6 @@ class ChatController extends StateNotifier<ChatState> {
         text: complete.text,
         timestamp: DateTime.now(),
         conversationId: conversationId,
-        messageType: complete.messageType,
-        highlights: complete.highlights,
-        categoryBreakdown: complete.categoryBreakdown,
-        recurringPayments: complete.recurringPayments,
         followUpSuggestions: complete.followUpSuggestions,
         usedFinancialData: complete.usedFinancialData,
       );
@@ -666,7 +626,7 @@ class ChatController extends StateNotifier<ChatState> {
       await for (final chunk in _repository.sendMessage(
         conversationId,
         userMessage,
-        fileUrl: fileUrl,
+        fileId: fileId,
       )) {
         if (!isActive()) return;
 
@@ -729,101 +689,15 @@ class ChatController extends StateNotifier<ChatState> {
     if (conversationId != null) _persist(conversationId, messages);
   }
 
+  /// Picks a financial document and sends it immediately as a file-only
+  /// message — the same real, `file_id`-based upload-and-send path as
+  /// attaching a file from the composer (see [sendMessage]), just
+  /// triggered from outside it (e.g. Quick's "Understand a financial
+  /// document" shortcut).
   Future<void> pickAndUploadStatement() async {
     final picked = await _filePicker.pickStatementFile();
     if (picked == null) return; // user cancelled — no error, no state change
-
-    final attachment = UploadedFileAttachment(
-      fileName: picked.name,
-      extension: picked.extension,
-      sizeBytes: picked.sizeBytes,
-    );
-    final fileMessageId = 'file-${DateTime.now().microsecondsSinceEpoch}';
-
-    final fileMessage = ChatMessage(
-      id: fileMessageId,
-      role: ChatMessageRole.user,
-      text: '',
-      timestamp: DateTime.now(),
-      messageType: ChatMessageType.fileAttachment,
-      fileAttachment: attachment,
-    );
-
-    state = state.copyWith(
-      messages: [...state.messages, fileMessage],
-      pendingAttachmentMessageId: fileMessageId,
-    );
-
-    await Future.delayed(_attachmentConfirmWindow);
-    // The user removed it during the confirm window — nothing to analyze.
-    if (state.pendingAttachmentMessageId != fileMessageId) return;
-
-    await _runAnalysis(attachment);
-  }
-
-  /// Removes a just-attached file before analysis has started.
-  void removeAttachment(String messageId) {
-    if (state.pendingAttachmentMessageId != messageId) return;
-    state = state.copyWith(
-      messages: state.messages.where((m) => m.id != messageId).toList(),
-      clearPendingAttachment: true,
-    );
-  }
-
-  Future<void> retryAnalysis() async {
-    final attachment = state.lastFailedAttachment;
-    if (attachment == null) return;
-    await _runAnalysis(attachment);
-  }
-
-  Future<void> _runAnalysis(UploadedFileAttachment attachment) async {
-    state = state.copyWith(
-      isAssistantTyping: true,
-      typingLabel: 'Analyzing your statement',
-      clearPendingAttachment: true,
-      clearLastFailedAttachment: true,
-    );
-
-    final String conversationId;
-    try {
-      conversationId = await _ensureConversation(
-        seedTitleFrom: 'Statement analysis',
-      );
-    } catch (_) {
-      state = state.copyWith(isAssistantTyping: false, clearTypingLabel: true);
-      return;
-    }
-
-    try {
-      final result = await _repository.analyzeStatement(attachment);
-      final messages = [...state.messages, result.message];
-      state = state.copyWith(
-        conversations: _touchConversation(conversationId),
-        messages: messages,
-        isAssistantTyping: false,
-        clearTypingLabel: true,
-        hasFinancialData: true,
-        statementFileName: attachment.fileName,
-        statementPeriodStart: result.periodStart,
-        statementPeriodEnd: result.periodEnd,
-      );
-      _persist(conversationId, messages);
-    } catch (_) {
-      final errorMessage = ChatMessage(
-        id: 'error-${DateTime.now().microsecondsSinceEpoch}',
-        role: ChatMessageRole.assistant,
-        text: "Couldn't analyze this statement. Please try again.",
-        timestamp: DateTime.now(),
-        messageType: ChatMessageType.analysisError,
-        fileAttachment: attachment,
-      );
-      state = state.copyWith(
-        messages: [...state.messages, errorMessage],
-        isAssistantTyping: false,
-        clearTypingLabel: true,
-        lastFailedAttachment: attachment,
-      );
-    }
+    await sendMessage('', attachment: picked);
   }
 
   List<Conversation> _touchConversation(

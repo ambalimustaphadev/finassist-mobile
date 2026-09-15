@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -37,6 +38,14 @@ class ApiFileUploadRepository implements FileUploadRepository {
       throw Exception("That file couldn't be found. Please pick it again.");
     }
 
+    final sizeBytes = await file.length();
+    if (kDebugMode) {
+      debugPrint(
+        '[upload] starting -> filename=${file.uri.pathSegments.last} '
+        'size=${sizeBytes}b',
+      );
+    }
+
     final request =
         http.MultipartRequest('POST', Uri.parse('$baseUrl/api/files/upload'))
           ..headers['Authorization'] = 'Bearer $accessToken'
@@ -48,21 +57,27 @@ class ApiFileUploadRepository implements FileUploadRepository {
     try {
       streamedResponse = await _client.send(request).timeout(_uploadTimeout);
     } on TimeoutException {
+      if (kDebugMode) debugPrint('[upload] timed out');
       throw Exception(
         "Couldn't connect. Please check your connection and try again.",
       );
-    } catch (_) {
+    } catch (error) {
+      if (kDebugMode) debugPrint('[upload] failed to reach server: $error');
       throw Exception(
         "Couldn't reach the server. Please check your connection and try again.",
       );
     }
 
     final response = await http.Response.fromStream(streamedResponse);
+    if (kDebugMode) {
+      debugPrint('[upload] response <- status=${response.statusCode}');
+    }
 
     if (response.statusCode == 401) {
       throw const FileUploadUnauthorizedException();
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (kDebugMode) debugPrint('[upload] error body <- ${response.body}');
       throw Exception('Upload failed: ${response.statusCode}');
     }
 
@@ -77,6 +92,10 @@ class ApiFileUploadRepository implements FileUploadRepository {
     if (fileJson is! Map<String, dynamic>) {
       throw Exception('The server returned an invalid upload response.');
     }
-    return UploadedFile.fromJson(fileJson);
+    final uploaded = UploadedFile.fromJson(fileJson);
+    if (kDebugMode) {
+      debugPrint('[upload] file_id present (${uploaded.id})');
+    }
+    return uploaded;
   }
 }

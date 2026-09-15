@@ -4,19 +4,23 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 
-/// The solid deep-green CTA used for both "Login" and "Create account" —
-/// shows a small inline spinner and disables itself while [isLoading].
+/// The solid deep-green, pill-shaped CTA used for every primary auth action
+/// ("Login", "Create account", ...) — shows a small inline spinner and
+/// disables itself while [isLoading], and a trailing arrow glyph (matching
+/// the reference's buttons) unless [showArrow] is turned off.
 class AuthPrimaryButton extends StatelessWidget {
   const AuthPrimaryButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.isLoading = false,
+    this.showArrow = true,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
+  final bool showArrow;
 
   @override
   Widget build(BuildContext context) {
@@ -28,10 +32,10 @@ class AuthPrimaryButton extends StatelessWidget {
         color: enabled
             ? AppColors.accentDeep
             : AppColors.accentDeep.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         child: InkWell(
           onTap: enabled ? onPressed : null,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             child: Center(
@@ -44,11 +48,24 @@ class AuthPrimaryButton extends StatelessWidget {
                         color: Colors.white,
                       ),
                     )
-                  : Text(
-                      label,
-                      style: AppTypography.buttonLabel.copyWith(
-                        color: Colors.white,
-                      ),
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          label,
+                          style: AppTypography.buttonLabel.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (showArrow) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ],
                     ),
             ),
           ),

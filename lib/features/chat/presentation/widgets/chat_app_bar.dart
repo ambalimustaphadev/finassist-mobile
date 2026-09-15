@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/router.dart';
 import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../shared/widgets/ai_avatar.dart';
+import '../../../shell/presentation/widgets/main_header_bar.dart';
 import '../providers/chat_controller.dart';
+import '../providers/chat_state.dart';
 
-/// The chat screen's header: a menu icon that opens the conversations
-/// drawer, the FinAssist identity, a home icon that returns to the
-/// existing Dashboard, and a "+" that starts a fresh conversation — a
-/// workspace, not a single session with an "end" action.
-///
-/// The home icon is deliberately the *only* control here that navigates
-/// to Dashboard — the title isn't tappable, the menu only opens the
-/// drawer, and "+" only starts a new conversation.
+/// Chat's header: a menu icon that opens the conversations drawer, the
+/// FinAssist identity with a contextual subtitle, and an avatar that jumps
+/// to Profile. Deliberately has no back arrow and no "go to Dashboard"
+/// icon — Chat is FinAssist's root/landing destination, not a screen
+/// something else navigated into. Starting a new conversation lives
+/// solely in the drawer's "+ New chat" (see `ChatDrawer`) — there is
+/// exactly one way to do it.
 ///
 /// Deliberately not a Scaffold `appBar:` — a custom [PreferredSizeWidget]
 /// placed there doesn't get the automatic top-safe-area handling built-in
@@ -27,90 +25,41 @@ class ChatAppBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.sm,
-        AppSpacing.sm,
-        AppSpacing.sm,
-        AppSpacing.md,
-      ),
-      child: Row(
-        children: [
-          _HeaderIconButton(
-            icon: Icons.menu_rounded,
-            semanticLabel: 'Open menu',
-            onTap: () => Scaffold.of(context).openDrawer(),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          const AIAvatar(size: 30),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              'FinAssist AI',
-              style: AppTypography.screenTitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          _HeaderIconButton(
-            icon: Icons.home_rounded,
-            semanticLabel: 'Go to Dashboard',
-            onTap: () => _goToDashboard(context),
-          ),
-          _HeaderIconButton(
-            icon: Icons.add_rounded,
-            semanticLabel: 'New conversation',
-            onTap: () => ref
-                .read(chatControllerProvider.notifier)
-                .startNewConversation(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Chat is always reached by pushing on top of the existing Dashboard
-  /// route, so returning to it is just popping back to that instance —
-  /// never pushing a second Dashboard/route. The fallback only matters if
-  /// this screen were ever somehow the root of the stack.
-  void _goToDashboard(BuildContext context) {
-    final navigator = Navigator.of(context);
-    if (navigator.canPop()) {
-      navigator.pop();
-    } else {
-      navigator.pushReplacementNamed(AppRoutes.home);
-    }
+    final chatState = ref.watch(chatControllerProvider);
+    return MainHeaderBar(subtitle: _StatusSubtitle(chatState: chatState));
   }
 }
 
-class _HeaderIconButton extends StatelessWidget {
-  const _HeaderIconButton({
-    required this.icon,
-    required this.semanticLabel,
-    required this.onTap,
-  });
+/// "Your financial AI companion" before any conversation exists, or a
+/// small derived online/offline indicator once one is underway — derived
+/// from `ChatState.conversationStatus`, not a separate polling subsystem.
+class _StatusSubtitle extends StatelessWidget {
+  const _StatusSubtitle({required this.chatState});
 
-  final IconData icon;
-  final String semanticLabel;
-  final VoidCallback onTap;
+  final ChatState chatState;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: semanticLabel,
-      child: Material(
-        color: Colors.transparent,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Icon(icon, color: AppColors.textPrimary),
-          ),
+    if (chatState.messages.isEmpty) return const BrandTagline();
+
+    final isOffline =
+        chatState.conversationStatus == ConversationLoadStatus.error;
+    final color = isOffline ? AppColors.negative : AppColors.accentStrong;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-      ),
+        const SizedBox(width: 5),
+        Text(
+          isOffline ? 'Offline' : 'Online',
+          style: AppTypography.caption.copyWith(color: color),
+        ),
+      ],
     );
   }
 }

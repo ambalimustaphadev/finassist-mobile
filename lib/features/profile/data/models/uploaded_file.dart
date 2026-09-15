@@ -1,15 +1,19 @@
 /// The backend's record of a file uploaded via `POST /api/files/upload` —
-/// mirrors the `file` object in its JSON response exactly. The actual
-/// bytes live in Cloudflare R2 under [key]; Flutter never talks to R2
-/// directly and never sees any R2 credentials, only this metadata.
+/// mirrors the safe metadata shape of the `file` object in its JSON
+/// response. Financial documents are private in Cloudflare R2: the
+/// backend no longer returns a permanent/public URL (or its R2 [key])
+/// here at all — [id] is the document's only identity Flutter ever
+/// carries. Viewing it later means asking `GET /api/files/<id>/view` for
+/// a fresh, short-lived signed URL, not reusing anything from this model.
 class UploadedFile {
   const UploadedFile({
     required this.id,
     required this.filename,
     required this.size,
     required this.contentType,
-    required this.key,
-    required this.fileUrl,
+    this.documentType,
+    this.processingStatus,
+    this.createdAt,
   });
 
   final int id;
@@ -17,15 +21,17 @@ class UploadedFile {
   final int size;
   final String contentType;
 
-  /// The object's storage key inside the R2 bucket — server-generated,
-  /// never constructed on the Flutter side.
-  final String key;
+  /// The backend's classification of the document (e.g. `bank_statement`),
+  /// when it reports one. Purely informational today — nothing in Flutter
+  /// branches on it yet.
+  final String? documentType;
 
-  /// The R2-accessible URL for this object, as returned by the backend
-  /// (`Config.DEVELOPMENT_URL` + [key]) — the only file reference passed
-  /// to Chat or used to open the document. Flutter never constructs this
-  /// itself and never talks to R2 directly.
-  final String fileUrl;
+  /// The backend's processing/analysis status for this document, when it
+  /// reports one (e.g. `pending`, `processed`). Purely informational
+  /// today.
+  final String? processingStatus;
+
+  final DateTime? createdAt;
 
   factory UploadedFile.fromJson(Map<String, dynamic> json) {
     return UploadedFile(
@@ -37,8 +43,11 @@ class UploadedFile {
           ? json['size'] as int
           : int.tryParse(json['size'].toString()) ?? 0,
       contentType: (json['content_type'] ?? '').toString(),
-      key: (json['key'] ?? '').toString(),
-      fileUrl: (json['file_url'] ?? '').toString(),
+      documentType: json['document_type'] as String?,
+      processingStatus: json['processing_status'] as String?,
+      createdAt: json['created_at'] == null
+          ? null
+          : DateTime.tryParse(json['created_at'].toString()),
     );
   }
 }

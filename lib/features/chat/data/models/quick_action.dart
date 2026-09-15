@@ -20,7 +20,10 @@ class QuickAction {
   final bool triggersUpload;
 }
 
-const List<QuickAction> _beforeAnalysisActions = [
+/// The suggestions shown above the composer once a conversation has at
+/// least one message — plain prompts the AI answers conversationally,
+/// never a promise of a specific dashboard-style card in response.
+const List<QuickAction> quickActions = [
   QuickAction(
     label: 'Analyze my spending',
     icon: Icons.query_stats_rounded,
@@ -43,32 +46,3 @@ const List<QuickAction> _beforeAnalysisActions = [
     triggersUpload: true,
   ),
 ];
-
-const List<QuickAction> _afterAnalysisActions = [
-  QuickAction(
-    label: 'Spending summary',
-    icon: Icons.pie_chart_rounded,
-    prompt: 'Give me a summary of my spending this month.',
-  ),
-  QuickAction(
-    label: 'Recurring payments',
-    icon: Icons.event_repeat_rounded,
-    prompt: 'Can you show me my recurring payments?',
-  ),
-  QuickAction(
-    label: 'Where can I cut down?',
-    icon: Icons.trending_down_rounded,
-    prompt: 'Where can I cut down on spending?',
-  ),
-  QuickAction(
-    label: 'Compare my spending',
-    icon: Icons.compare_arrows_rounded,
-    prompt: 'Compare my spending with last month.',
-  ),
-];
-
-/// The quick-action suggestions change once a statement has been analyzed,
-/// so the interface feels like it's actually paying attention.
-List<QuickAction> quickActionsFor({required bool hasFinancialData}) {
-  return hasFinancialData ? _afterAnalysisActions : _beforeAnalysisActions;
-}
