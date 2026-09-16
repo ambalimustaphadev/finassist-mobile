@@ -15,7 +15,7 @@ import '../providers/chat_controller.dart';
 
 /// FinAssist's side menu: brand header, "+ New chat", conversation search,
 /// grouped recent conversations, Settings and the signed-in user — reached
-/// from any of Chat/Quick/Tools via their own `Scaffold(drawer:
+/// from Chat, Track or Tools via their own `Scaffold(drawer:
 /// ChatDrawer())`. All three instances read/write the same
 /// `chatControllerProvider`, so opening a conversation from any of them
 /// behaves identically and always lands on the Chat tab.
@@ -344,6 +344,7 @@ class _ConversationSearchField extends StatelessWidget {
         child: TextField(
           controller: controller,
           textInputAction: TextInputAction.search,
+          textCapitalization: TextCapitalization.sentences,
           style: AppTypography.body.copyWith(color: AppColors.textPrimary),
           decoration: InputDecoration(
             isDense: true,

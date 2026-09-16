@@ -12,7 +12,7 @@ import '../providers/shell_providers.dart';
 /// The shared top bar used across FinAssist's main tabs: a menu button
 /// that opens the conversation-history drawer, the FinAssist brand mark
 /// with a contextual [subtitle], and an avatar that jumps to Profile.
-/// Reused by Chat (with a dynamic online/offline subtitle), Quick and
+/// Reused by Chat (with a dynamic online/offline subtitle), Track and
 /// Tools (with a static tagline) so the app's chrome reads as one
 /// consistent identity everywhere except Profile, which is the
 /// destination that chrome points to.
@@ -97,7 +97,7 @@ class MainHeaderBar extends ConsumerWidget {
 }
 
 /// A plain "Your financial AI companion" tagline — the default subtitle
-/// for screens that aren't tracking a live status (Quick, Tools).
+/// for screens that aren't tracking a live status (Track, Tools).
 class BrandTagline extends StatelessWidget {
   const BrandTagline({super.key});
 

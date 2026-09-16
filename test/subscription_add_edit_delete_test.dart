@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:finassist/features/subscriptions/data/models/subscription.dart';
+import 'package:finassist/features/track/data/models/subscription.dart';
 
 import 'support/pump_app.dart';
 
@@ -34,15 +34,7 @@ Future<void> _openSubscriptions(
   await loginWithDemoAccount(tester);
   await tester.pumpAndSettle();
 
-  await tester.tap(find.text('Tools'));
-  await tester.pumpAndSettle();
-
-  await tester.dragUntilVisible(
-    find.text('Subscription Tracker'),
-    find.byType(CustomScrollView),
-    const Offset(0, -300),
-  );
-  await tester.tap(find.text('Subscription Tracker'));
+  await tester.tap(find.text('Track'));
   await tester.pumpAndSettle();
 }
 

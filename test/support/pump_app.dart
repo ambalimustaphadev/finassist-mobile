@@ -30,9 +30,9 @@ import 'package:finassist/features/profile/data/repositories/profile_repository.
 import 'package:finassist/features/profile/presentation/providers/preferences_controller.dart';
 import 'package:finassist/features/profile/presentation/providers/profile_controller.dart';
 import 'package:finassist/features/profile/presentation/providers/profile_finance_controller.dart';
-import 'package:finassist/features/subscriptions/data/models/subscription.dart';
-import 'package:finassist/features/subscriptions/data/repositories/subscription_repository.dart';
-import 'package:finassist/features/subscriptions/presentation/providers/subscription_controller.dart';
+import 'package:finassist/features/track/data/models/subscription.dart';
+import 'package:finassist/features/track/data/repositories/subscription_repository.dart';
+import 'package:finassist/features/track/presentation/providers/subscription_controller.dart';
 
 /// `flutter_secure_storage` talks to native code over a MethodChannel that
 /// doesn't exist in a widget-test environment. Left unmocked, a call on it

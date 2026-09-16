@@ -355,6 +355,7 @@ class _EditableField extends StatelessWidget {
                   ),
                   TextField(
                     controller: controller,
+                    textCapitalization: TextCapitalization.words,
                     style: AppTypography.body.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,

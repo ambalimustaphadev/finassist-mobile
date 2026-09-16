@@ -100,6 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.email],
                 validator: AuthValidators.email,
+                textCapitalization: TextCapitalization.none,
               ),
               const SizedBox(height: AppSpacing.lg),
               AuthPasswordField(

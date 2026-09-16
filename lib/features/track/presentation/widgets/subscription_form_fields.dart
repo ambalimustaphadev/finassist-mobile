@@ -33,6 +33,7 @@ class SubscriptionTextField extends StatelessWidget {
     this.errorText,
     this.keyboardType,
     this.maxLines = 1,
+    this.textCapitalization = TextCapitalization.sentences,
   });
 
   final String label;
@@ -41,6 +42,12 @@ class SubscriptionTextField extends StatelessWidget {
   final String? errorText;
   final TextInputType? keyboardType;
   final int maxLines;
+
+  /// Defaults to [TextCapitalization.sentences]. Callers pass
+  /// [TextCapitalization.words] for a name-like field or
+  /// [TextCapitalization.none] for a machine-readable value (a website
+  /// URL, an amount).
+  final TextCapitalization textCapitalization;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +59,7 @@ class SubscriptionTextField extends StatelessWidget {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          textCapitalization: textCapitalization,
           maxLines: maxLines,
           style: AppTypography.body.copyWith(color: AppColors.textPrimary),
           decoration: _fieldDecoration(hintText: hintText, errorText: errorText),

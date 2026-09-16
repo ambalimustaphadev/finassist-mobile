@@ -344,6 +344,7 @@ class _BasicInfoStep extends StatelessWidget {
           controller: nameController,
           hintText: 'e.g. Netflix',
           errorText: nameError,
+          textCapitalization: TextCapitalization.words,
         ),
         const SizedBox(height: AppSpacing.md),
         SubscriptionTextField(
@@ -352,6 +353,7 @@ class _BasicInfoStep extends StatelessWidget {
           hintText: '0.00',
           errorText: amountError,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textCapitalization: TextCapitalization.none,
         ),
         const SizedBox(height: AppSpacing.md),
         SubscriptionDropdownField<CurrencyOption>(
@@ -430,6 +432,7 @@ class _DetailsStep extends StatelessWidget {
           controller: websiteController,
           hintText: 'https://...',
           keyboardType: TextInputType.url,
+          textCapitalization: TextCapitalization.none,
         ),
         const SizedBox(height: AppSpacing.md),
         SubscriptionTextField(

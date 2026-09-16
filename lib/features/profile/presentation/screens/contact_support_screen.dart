@@ -150,6 +150,7 @@ class _ContactSupportScreenState extends ConsumerState<ContactSupportScreen> {
             const SizedBox(height: AppSpacing.xs),
             TextField(
               controller: _descriptionController,
+              textCapitalization: TextCapitalization.sentences,
               maxLines: 6,
               style: AppTypography.body.copyWith(color: AppColors.textPrimary),
               decoration: InputDecoration(

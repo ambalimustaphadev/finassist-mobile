@@ -154,6 +154,7 @@ class _EditSubscriptionScreenState extends ConsumerState<EditSubscriptionScreen>
               label: 'Name',
               controller: _nameController,
               errorText: _nameError,
+              textCapitalization: TextCapitalization.words,
             ),
             const SizedBox(height: AppSpacing.md),
             SubscriptionTextField(
@@ -161,6 +162,7 @@ class _EditSubscriptionScreenState extends ConsumerState<EditSubscriptionScreen>
               controller: _amountController,
               errorText: _amountError,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              textCapitalization: TextCapitalization.none,
             ),
             const SizedBox(height: AppSpacing.md),
             SubscriptionDropdownField<CurrencyOption>(
@@ -202,7 +204,11 @@ class _EditSubscriptionScreenState extends ConsumerState<EditSubscriptionScreen>
               onChanged: (m) => setState(() => _paymentMethod = m),
             ),
             const SizedBox(height: AppSpacing.md),
-            SubscriptionTextField(label: 'Website', controller: _websiteController),
+            SubscriptionTextField(
+              label: 'Website',
+              controller: _websiteController,
+              textCapitalization: TextCapitalization.none,
+            ),
             const SizedBox(height: AppSpacing.md),
             SubscriptionTextField(
               label: 'Notes',

@@ -143,6 +143,7 @@ class _ListContent extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: searchController,
+                  textCapitalization: TextCapitalization.sentences,
                   onChanged: onQueryChanged,
                   style: AppTypography.body.copyWith(color: AppColors.textPrimary),
                   decoration: InputDecoration(

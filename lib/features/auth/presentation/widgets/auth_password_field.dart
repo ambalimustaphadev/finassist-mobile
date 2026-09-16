@@ -48,6 +48,7 @@ class _AuthPasswordFieldState extends State<AuthPasswordField> {
         onChanged: widget.onChanged,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         autofillHints: widget.autofillHints,
+        textCapitalization: TextCapitalization.none,
         style: AppTypography.bodyMedium.copyWith(
           color: AppColors.authTextPrimary,
         ),

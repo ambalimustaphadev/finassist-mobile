@@ -6,8 +6,10 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/extensions/formatting_extensions.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../../chat/presentation/widgets/chat_drawer.dart';
 import '../../../profile/data/models/preferences.dart';
 import '../../../profile/presentation/providers/preferences_controller.dart';
+import '../../../shell/presentation/widgets/main_header_bar.dart';
 import '../../data/models/subscription.dart';
 import '../../domain/subscription_schedule.dart';
 import '../../domain/subscription_totals.dart';
@@ -18,9 +20,12 @@ import 'add_subscription_flow_screen.dart';
 import 'all_subscriptions_screen.dart';
 import 'subscription_detail_screen.dart';
 
-/// The Subscription Tracker's entry screen, reached only from Tools' new
-/// "Track" section — header, monthly/yearly spend summary and the most
-/// relevant upcoming renewals.
+/// The Subscription Tracker's entry screen — the Track tab of
+/// [MainShellScreen] — the shared [MainHeaderBar], monthly/yearly spend
+/// summary and the most relevant upcoming renewals. Uses the same
+/// header/drawer/SafeArea structure as Chat and Tools so switching between
+/// root tabs feels consistent, not like dropping into a pushed detail
+/// screen.
 class SubscriptionOverviewScreen extends ConsumerWidget {
   const SubscriptionOverviewScreen({super.key});
 
@@ -32,9 +37,11 @@ class SubscriptionOverviewScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      drawer: const ChatDrawer(),
       body: SafeArea(
         child: Column(
           children: [
+            const MainHeaderBar(subtitle: BrandTagline()),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,
@@ -43,13 +50,9 @@ class SubscriptionOverviewScreen extends ConsumerWidget {
                 0,
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    color: AppColors.textPrimary,
-                  ),
-                  const Spacer(),
+                  Text('Subscriptions', style: AppTypography.greeting),
                   _AddButton(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -63,8 +66,9 @@ class SubscriptionOverviewScreen extends ConsumerWidget {
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.accent,
-                onRefresh: () =>
-                    ref.read(subscriptionsControllerProvider.notifier).refresh(),
+                onRefresh: () => ref
+                    .read(subscriptionsControllerProvider.notifier)
+                    .refresh(),
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.lg,
@@ -73,8 +77,7 @@ class SubscriptionOverviewScreen extends ConsumerWidget {
                     AppSpacing.xxxl,
                   ),
                   children: [
-                    Text('Subscriptions', style: AppTypography.greeting),
-                    const SizedBox(height: AppSpacing.xs),
+                    // const SizedBox(height: AppSpacing.xs),
                     Text(
                       'Keep track of your recurring payments and upcoming '
                       'renewals.',
@@ -85,7 +88,8 @@ class SubscriptionOverviewScreen extends ConsumerWidget {
                       const LoadingStateView(height: 300)
                     else if (state.status == SubscriptionsLoadStatus.error)
                       ErrorStateView(
-                        message: state.loadError ??
+                        message:
+                            state.loadError ??
                             'Something went wrong. Please try again.',
                         onRetry: () => ref
                             .read(subscriptionsControllerProvider.notifier)
@@ -128,11 +132,12 @@ class _OverviewContent extends StatelessWidget {
     final count = subscriptions.length;
     final countLabel = 'Across $count subscription${count == 1 ? '' : 's'}';
 
-    final upcoming = subscriptions
-        .where((s) => s.status == SubscriptionStatus.active)
-        .map((s) => (s, nextOccurrence(s.nextBillingDate, s.frequency)))
-        .toList()
-      ..sort((a, b) => a.$2.compareTo(b.$2));
+    final upcoming =
+        subscriptions
+            .where((s) => s.status == SubscriptionStatus.active)
+            .map((s) => (s, nextOccurrence(s.nextBillingDate, s.frequency)))
+            .toList()
+          ..sort((a, b) => a.$2.compareTo(b.$2));
     final topUpcoming = upcoming.take(5).toList();
 
     return Column(
@@ -174,7 +179,9 @@ class _OverviewContent extends StatelessWidget {
               label: 'All subscriptions (${subscriptions.length})',
               selected: false,
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AllSubscriptionsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const AllSubscriptionsScreen(),
+                ),
               ),
             ),
           ],
@@ -195,9 +202,8 @@ class _OverviewContent extends StatelessWidget {
               nextDate: entry.$2,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => SubscriptionDetailScreen(
-                    subscriptionId: entry.$1.id,
-                  ),
+                  builder: (_) =>
+                      SubscriptionDetailScreen(subscriptionId: entry.$1.id),
                 ),
               ),
             ),
@@ -261,12 +267,16 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.caption.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             value,
-            style: AppTypography.financialNumberMedium.copyWith(color: valueColor),
+            style: AppTypography.financialNumberMedium.copyWith(
+              color: valueColor,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

@@ -144,6 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 autofillHints: const [AutofillHints.givenName],
                 validator: (value) =>
                     AuthValidators.required(value, 'First name'),
+                textCapitalization: TextCapitalization.words,
               ),
               const SizedBox(height: AppSpacing.lg),
               AuthTextField(
@@ -155,6 +156,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 autofillHints: const [AutofillHints.familyName],
                 validator: (value) =>
                     AuthValidators.required(value, 'Last name'),
+                textCapitalization: TextCapitalization.words,
               ),
               const SizedBox(height: AppSpacing.lg),
               AuthTextField(
@@ -166,6 +168,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.email],
                 validator: AuthValidators.email,
+                textCapitalization: TextCapitalization.none,
               ),
               const SizedBox(height: AppSpacing.lg),
               AuthTextField(
@@ -177,6 +180,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 autofillHints: const [AutofillHints.newUsername],
                 validator: (value) =>
                     AuthValidators.required(value, 'Username'),
+                textCapitalization: TextCapitalization.none,
               ),
               const SizedBox(height: AppSpacing.lg),
               AuthPasswordField(

@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:finassist/features/subscriptions/data/models/subscription.dart';
-import 'package:finassist/features/subscriptions/domain/subscription_brand.dart';
-import 'package:finassist/features/subscriptions/domain/subscription_filter.dart';
-import 'package:finassist/features/subscriptions/domain/subscription_schedule.dart';
-import 'package:finassist/features/subscriptions/domain/subscription_totals.dart';
+import 'package:finassist/features/track/data/models/subscription.dart';
+import 'package:finassist/features/track/domain/subscription_brand.dart';
+import 'package:finassist/features/track/domain/subscription_filter.dart';
+import 'package:finassist/features/track/domain/subscription_schedule.dart';
+import 'package:finassist/features/track/domain/subscription_totals.dart';
 
 Subscription _sub({
   int id = 1,

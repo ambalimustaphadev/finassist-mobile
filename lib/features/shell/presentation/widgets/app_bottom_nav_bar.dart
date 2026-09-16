@@ -15,12 +15,12 @@ class _NavItem {
 
 const _navItems = [
   _NavItem(Icons.chat_bubble_rounded, 'Chat'),
-  _NavItem(Icons.bolt_rounded, 'Quick'),
-  _NavItem(Icons.grid_view_rounded, 'Tools'),
+  _NavItem(Icons.receipt_long_rounded, 'Track'),
+  _NavItem(Icons.calculate_rounded, 'Tools'),
   _NavItem(Icons.person_rounded, 'Profile'),
 ];
 
-/// Bottom navigation for FinAssist's main shell: Chat, Quick, Tools,
+/// Bottom navigation for FinAssist's main shell: Chat, Track, Tools,
 /// Profile — no Dashboard, no History, no separate Upload tab. Tapping any
 /// tab switches [mainTabProvider] in place rather than pushing a new
 /// route, so this bar (and the active tab's highlight) stays on screen no

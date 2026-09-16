@@ -20,6 +20,7 @@ class AuthTextField extends StatelessWidget {
     this.textInputAction,
     this.validator,
     this.autofillHints,
+    this.textCapitalization = TextCapitalization.sentences,
   });
 
   final String label;
@@ -30,6 +31,12 @@ class AuthTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final String? Function(String?)? validator;
   final Iterable<String>? autofillHints;
+
+  /// Defaults to [TextCapitalization.sentences] — the right default for
+  /// most fields. Callers whose field is a machine-readable value (email,
+  /// username) or should capitalize every word (a person's name) pass
+  /// their own.
+  final TextCapitalization textCapitalization;
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +50,7 @@ class AuthTextField extends StatelessWidget {
         validator: validator,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         autofillHints: autofillHints,
+        textCapitalization: textCapitalization,
         style: AppTypography.bodyMedium.copyWith(
           color: AppColors.authTextPrimary,
         ),

@@ -163,6 +163,7 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
               ),
               child: TextField(
                 controller: _searchController,
+                textCapitalization: TextCapitalization.sentences,
                 onChanged: (value) => setState(() => _query = value),
                 style: AppTypography.body.copyWith(
                   color: AppColors.textPrimary,

@@ -63,6 +63,7 @@ class CalculatorField extends StatelessWidget {
           TextField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            textCapitalization: TextCapitalization.none,
             style: AppTypography.body,
             decoration: InputDecoration(
               filled: true,

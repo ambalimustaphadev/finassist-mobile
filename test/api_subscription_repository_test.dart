@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 import 'package:finassist/core/network/api_client.dart';
-import 'package:finassist/features/subscriptions/data/repositories/api_subscription_repository.dart';
+import 'package:finassist/features/track/data/repositories/api_subscription_repository.dart';
 
 const _secureStorageChannel = MethodChannel(
   'plugins.it_nomads.com/flutter_secure_storage',

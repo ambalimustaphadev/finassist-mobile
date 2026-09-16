@@ -180,6 +180,7 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
                   ),
                   textInputAction: TextInputAction.send,
                   keyboardType: TextInputType.multiline,
+                  textCapitalization: TextCapitalization.sentences,
                   minLines: 1,
                   maxLines: 5,
                   onSubmitted: (_) => _submit(),
