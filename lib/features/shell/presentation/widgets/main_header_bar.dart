@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../shared/widgets/finassist_logo.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../profile/presentation/providers/profile_controller.dart';
 import '../providers/shell_providers.dart';
@@ -116,20 +117,7 @@ class _BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.16),
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.eco_rounded,
-        color: AppColors.accentDeep,
-        size: 17,
-      ),
-    );
+    return const FinAssistLogo(size: 30);
   }
 }
 

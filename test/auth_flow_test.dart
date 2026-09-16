@@ -258,12 +258,13 @@ void main() {
         expect(tester.widget<TextField>(confirmField).obscureText, isTrue);
 
         // Revealing the Password field must not affect Confirm password.
-        await tester.tap(
-          find.descendant(
-            of: find.byKey(const ValueKey('register-password-field')),
-            matching: find.byIcon(Icons.visibility_off_outlined),
-          ),
+        final passwordToggle = find.descendant(
+          of: find.byKey(const ValueKey('register-password-field')),
+          matching: find.byIcon(Icons.visibility_off_outlined),
         );
+        await tester.ensureVisible(passwordToggle);
+        await tester.pump();
+        await tester.tap(passwordToggle);
         await tester.pump();
 
         expect(tester.widget<TextField>(passwordField).obscureText, isFalse);

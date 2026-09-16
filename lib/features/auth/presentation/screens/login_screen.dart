@@ -5,6 +5,7 @@ import '../../../../app/router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../shared/widgets/finassist_logo.dart';
 import '../providers/auth_controller.dart';
 import '../utils/auth_validators.dart';
 import '../widgets/auth_checkbox.dart';
@@ -82,13 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Image.asset(
-                  'assets/splash/splash_logo.png',
-                  height: 56,
-                  errorBuilder: (_, _, _) => const SizedBox(height: 56),
-                ),
-              ),
+              const Center(child: FinAssistLogo(height: 56)),
               const SizedBox(height: AppSpacing.xxl),
               const AuthHeader(
                 title: 'Welcome back',

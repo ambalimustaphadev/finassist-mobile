@@ -6,6 +6,7 @@ import '../../../../app/router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../shared/widgets/finassist_logo.dart';
 import '../../../profile/presentation/widgets/unavailable_feature_screen.dart';
 import '../providers/auth_controller.dart';
 import '../utils/auth_validators.dart';
@@ -125,6 +126,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Center(child: FinAssistLogo(height: 56)),
+              const SizedBox(height: AppSpacing.xxl),
               const AuthHeader(
                 title: 'Create your \n Account',
                 subtitle:

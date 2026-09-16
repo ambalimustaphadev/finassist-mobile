@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../shared/widgets/finassist_logo.dart';
 
 /// Version comes straight from `pubspec.yaml` (`1.0.0+1`) — there's no
 /// `package_info_plus` (or similar) dependency in this project to read it
@@ -31,24 +32,7 @@ class AboutFinAssistScreen extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: AppColors.ctaGradient,
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadius.xl),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.spa_rounded,
-                      color: Colors.black87,
-                      size: 34,
-                    ),
-                  ),
+                  const FinAssistLogo(size: 72),
                   const SizedBox(height: AppSpacing.md),
                   Text('FinAssist', style: AppTypography.greeting),
                   const SizedBox(height: 2),

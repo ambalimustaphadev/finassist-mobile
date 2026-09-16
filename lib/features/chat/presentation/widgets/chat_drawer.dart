@@ -6,6 +6,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/extensions/formatting_extensions.dart';
 import '../../../../shared/widgets/confirm_action_dialog.dart';
+import '../../../../shared/widgets/finassist_logo.dart';
 import '../../../../shared/widgets/user_avatar.dart';
 import '../../../profile/presentation/providers/profile_controller.dart';
 import '../../../shell/presentation/providers/shell_providers.dart';
@@ -218,6 +219,8 @@ class _DrawerHeader extends StatelessWidget {
         children: [
           Row(
             children: [
+              const FinAssistLogo(size: 28),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text.rich(
                   TextSpan(

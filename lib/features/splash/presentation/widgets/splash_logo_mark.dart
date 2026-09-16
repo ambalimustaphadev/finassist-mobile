@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../shared/widgets/finassist_logo.dart';
 import '../splash_timeline.dart';
 
 /// The FinAssist mark: the project's real `splash_logo.png` asset
@@ -56,13 +57,7 @@ class SplashLogoMark extends StatelessWidget {
                   ],
                 ),
               ),
-              Image.asset(
-                'assets/splash/splash_logo.png',
-                width: size * 0.78,
-                height: size * 0.78,
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
-              ),
+              FinAssistLogo(size: size * 0.78),
             ],
           ),
         ),

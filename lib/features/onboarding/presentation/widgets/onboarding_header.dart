@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../shared/widgets/finassist_logo.dart';
 
 /// Top row shared by all onboarding carousel pages: the FinAssist wordmark
 /// (reusing the same logo asset + "Fin"/"Assist" split-color pattern as the
@@ -17,13 +18,7 @@ class OnboardingHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Image.asset(
-          'assets/splash/splash_logo.png',
-          width: 24,
-          height: 24,
-          fit: BoxFit.contain,
-          errorBuilder: (_, _, _) => const SizedBox.shrink(),
-        ),
+        const FinAssistLogo(size: 24),
         const SizedBox(width: 8),
         Text.rich(
           TextSpan(
