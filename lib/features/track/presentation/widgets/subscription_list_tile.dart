@@ -25,7 +25,7 @@ class SubscriptionListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final symbol = currencyOptionFor(subscription.currency).symbol;
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: InkWell(
         onTap: onTap,
@@ -34,7 +34,7 @@ class SubscriptionListTile extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: AppColors.borderSubtle),
+            border: Border.all(color: context.colors.borderSubtle),
           ),
           child: Row(
             children: [
@@ -50,14 +50,14 @@ class SubscriptionListTile extends StatelessWidget {
                   children: [
                     Text(
                       subscription.name,
-                      style: AppTypography.bodyMedium,
+                      style: AppTypography.bodyMedium(context),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${formatCurrency(subscription.amount, symbol)} / ${subscription.frequency.shortUnit}',
-                      style: AppTypography.caption,
+                      style: AppTypography.caption(context),
                     ),
                   ],
                 ),
@@ -65,9 +65,9 @@ class SubscriptionListTile extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               SubscriptionStatusBadge(status: subscription.status),
               const SizedBox(width: AppSpacing.xs),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.textMuted,
+                color: context.colors.textMuted,
               ),
             ],
           ),

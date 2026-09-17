@@ -57,11 +57,14 @@ class _AllSubscriptionsScreenState extends ConsumerState<AllSubscriptionsScreen>
     final all = state.subscriptions;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('All subscriptions', style: AppTypography.screenTitle),
+        title: Text(
+          'All subscriptions',
+          style: AppTypography.screenTitle(context),
+        ),
       ),
       body: SafeArea(
         child: state.status == SubscriptionsLoadStatus.loading
@@ -145,18 +148,20 @@ class _ListContent extends StatelessWidget {
                   controller: searchController,
                   textCapitalization: TextCapitalization.sentences,
                   onChanged: onQueryChanged,
-                  style: AppTypography.body.copyWith(color: AppColors.textPrimary),
+                  style: AppTypography.body(
+                    context,
+                  ).copyWith(color: context.colors.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Search subscriptions...',
-                    hintStyle: AppTypography.body.copyWith(
-                      color: AppColors.textMuted,
+                    hintStyle: AppTypography.body(context).copyWith(
+                      color: context.colors.textMuted,
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: AppColors.textMuted,
+                      color: context.colors.textMuted,
                     ),
                     filled: true,
-                    fillColor: AppColors.surface,
+                    fillColor: context.colors.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppRadius.md),
                       borderSide: BorderSide.none,
@@ -170,8 +175,8 @@ class _ListContent extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Material(
                 color: filters.isEmpty
-                    ? AppColors.surface
-                    : AppColors.accentDeep,
+                    ? context.colors.surface
+                    : context.colors.accent,
                 borderRadius: BorderRadius.circular(AppRadius.md),
                 child: InkWell(
                   onTap: onOpenFilters,
@@ -181,8 +186,8 @@ class _ListContent extends StatelessWidget {
                     child: Icon(
                       Icons.tune_rounded,
                       color: filters.isEmpty
-                          ? AppColors.textPrimary
-                          : Colors.white,
+                          ? context.colors.textPrimary
+                          : context.colors.textOnAccent,
                     ),
                   ),
                 ),
@@ -222,8 +227,8 @@ class _ListContent extends StatelessWidget {
                     child: Text(
                       'No subscriptions match your search or filters.',
                       textAlign: TextAlign.center,
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.textMuted,
+                      style: AppTypography.body(context).copyWith(
+                        color: context.colors.textMuted,
                       ),
                     ),
                   ),
@@ -278,11 +283,16 @@ class _StatusTab extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
         child: Text(
           label,
-          style: (selected ? AppTypography.bodyMedium : AppTypography.body)
-              .copyWith(
-            color: selected ? AppColors.accentDeep : AppColors.textSecondary,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-          ),
+          style:
+              (selected
+                      ? AppTypography.bodyMedium(context)
+                      : AppTypography.body(context))
+                  .copyWith(
+                    color: selected
+                        ? context.colors.accentStrong
+                        : context.colors.textSecondary,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                  ),
         ),
       ),
     );

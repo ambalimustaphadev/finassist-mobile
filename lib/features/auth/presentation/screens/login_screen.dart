@@ -54,12 +54,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
+        SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surfaceElevated,
+          backgroundColor: context.colors.surfaceElevated,
           content: Text(
             'Password reset is coming soon',
-            style: TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: context.colors.textPrimary),
           ),
         ),
       );
@@ -134,9 +134,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: Text(
                                   'Remember me',
                                   overflow: TextOverflow.ellipsis,
-                                  style: AppTypography.caption.copyWith(
-                                    color: AppColors.authTextPrimary,
-                                  ),
+                                  style: AppTypography.caption(context)
+                                      .copyWith(
+                                        color: context.colors.textPrimary,
+                                      ),
                                 ),
                               ),
                             ],
@@ -153,8 +154,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: _handleForgotPassword,
                     child: Text(
                       'Forgot password?',
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.accentDeep,
+                      style: AppTypography.caption(context).copyWith(
+                        color: context.colors.accentStrong,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -180,13 +181,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   children: [
-                    Text("Don't have an account? ", style: AppTypography.body),
+                    Text(
+                      "Don't have an account? ",
+                      style: AppTypography.body(context),
+                    ),
                     GestureDetector(
                       onTap: _handleGoToRegister,
                       child: Text(
                         'Register',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.accentDeep,
+                        style: AppTypography.bodyMedium(context).copyWith(
+                          color: context.colors.accentStrong,
                         ),
                       ),
                     ),

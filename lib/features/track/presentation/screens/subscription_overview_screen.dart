@@ -36,7 +36,7 @@ class SubscriptionOverviewScreen extends ConsumerWidget {
     final symbol = currencyOptionFor(currency).symbol;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       drawer: const ChatDrawer(),
       body: SafeArea(
         child: Column(
@@ -52,7 +52,7 @@ class SubscriptionOverviewScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Subscriptions', style: AppTypography.greeting),
+                  Text('Subscriptions', style: AppTypography.greeting(context)),
                   _AddButton(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -65,7 +65,7 @@ class SubscriptionOverviewScreen extends ConsumerWidget {
             ),
             Expanded(
               child: RefreshIndicator(
-                color: AppColors.accent,
+                color: context.colors.accent,
                 onRefresh: () => ref
                     .read(subscriptionsControllerProvider.notifier)
                     .refresh(),
@@ -81,7 +81,7 @@ class SubscriptionOverviewScreen extends ConsumerWidget {
                     Text(
                       'Keep track of your recurring payments and upcoming '
                       'renewals.',
-                      style: AppTypography.body,
+                      style: AppTypography.body(context),
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     if (state.status == SubscriptionsLoadStatus.loading)
@@ -150,8 +150,8 @@ class _OverviewContent extends StatelessWidget {
                 label: 'Monthly spend',
                 value: formatCurrency(monthly, symbol),
                 subtitle: countLabel,
-                background: AppColors.onboardingMintTint,
-                valueColor: AppColors.accentStrong,
+                background: context.colors.accentSoft,
+                valueColor: context.colors.accentStrong,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -160,8 +160,10 @@ class _OverviewContent extends StatelessWidget {
                 label: 'Yearly spend',
                 value: formatCurrency(yearly, symbol),
                 subtitle: "That's ${formatCurrency(monthly, symbol)}/month",
-                background: AppColors.categoryBills.withValues(alpha: 0.12),
-                valueColor: AppColors.categoryBills,
+                background: context.colors.categoryBills.withValues(
+                  alpha: 0.12,
+                ),
+                valueColor: context.colors.categoryBills,
               ),
             ),
           ],
@@ -192,7 +194,9 @@ class _OverviewContent extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
             child: Text(
               'No upcoming renewals for active subscriptions.',
-              style: AppTypography.body.copyWith(color: AppColors.textMuted),
+              style: AppTypography.body(
+                context,
+              ).copyWith(color: context.colors.textMuted),
             ),
           )
         else ...[
@@ -219,7 +223,7 @@ class _OverviewContent extends StatelessWidget {
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.border),
+                side: BorderSide(color: context.colors.border),
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -227,9 +231,9 @@ class _OverviewContent extends StatelessWidget {
               ),
               child: Text(
                 'View all upcoming',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                ),
+                style: AppTypography.bodyMedium(
+                  context,
+                ).copyWith(color: context.colors.textPrimary),
               ),
             ),
           ),
@@ -267,23 +271,23 @@ class _SummaryCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: AppTypography.caption.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTypography.caption(
+              context,
+            ).copyWith(color: context.colors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             value,
-            style: AppTypography.financialNumberMedium.copyWith(
-              color: valueColor,
-            ),
+            style: AppTypography.financialNumberMedium(
+              context,
+            ).copyWith(color: valueColor),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
           Text(
             subtitle,
-            style: AppTypography.caption,
+            style: AppTypography.caption(context),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -315,13 +319,17 @@ class _SelectorPill extends StatelessWidget {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: selected ? AppColors.accentDeep : AppColors.surfaceHighlight,
+          color: selected
+              ? context.colors.accent
+              : context.colors.surfaceHighlight,
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           label,
-          style: AppTypography.caption.copyWith(
-            color: selected ? Colors.white : AppColors.textSecondary,
+          style: AppTypography.caption(context).copyWith(
+            color: selected
+                ? context.colors.textOnAccent
+                : context.colors.textSecondary,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -338,14 +346,18 @@ class _AddButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.accentDeep,
+      color: context.colors.accent,
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        child: const Padding(
-          padding: EdgeInsets.all(10),
-          child: Icon(Icons.add_rounded, color: Colors.white, size: 22),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Icon(
+            Icons.add_rounded,
+            color: context.colors.textOnAccent,
+            size: 22,
+          ),
         ),
       ),
     );

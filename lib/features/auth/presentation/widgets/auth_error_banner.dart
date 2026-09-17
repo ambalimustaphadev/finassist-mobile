@@ -19,22 +19,24 @@ class AuthErrorBanner extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.negative.withValues(alpha: 0.1),
+        color: context.colors.negative.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline_rounded,
             size: 16,
-            color: AppColors.negative,
+            color: context.colors.negative,
           ),
           const SizedBox(width: AppSpacing.sm),
           Flexible(
             child: Text(
               message,
-              style: AppTypography.caption.copyWith(color: AppColors.negative),
+              style: AppTypography.caption(
+                context,
+              ).copyWith(color: context.colors.negative),
             ),
           ),
         ],

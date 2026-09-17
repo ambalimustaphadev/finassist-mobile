@@ -51,11 +51,14 @@ class AuthTextField extends StatelessWidget {
         autovalidateMode: AutovalidateMode.onUserInteraction,
         autofillHints: autofillHints,
         textCapitalization: textCapitalization,
-        style: AppTypography.bodyMedium.copyWith(
-          color: AppColors.authTextPrimary,
+        style: AppTypography.bodyMedium(context).copyWith(
+          color: context.colors.textPrimary,
         ),
-        cursorColor: AppColors.accentDeep,
-        decoration: AuthInputCard.fieldDecoration(hintText: hintText),
+        cursorColor: context.colors.accentStrong,
+        decoration: AuthInputCard.fieldDecoration(
+          context: context,
+          hintText: hintText,
+        ),
       ),
     );
   }
@@ -89,13 +92,13 @@ class AuthInputCard extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.authInputFill,
+        color: context.colors.surfaceElevated,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.authInputBorder),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 19, color: AppColors.authTextMuted),
+          Icon(icon, size: 19, color: context.colors.textMuted),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
@@ -104,8 +107,8 @@ class AuthInputCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.authTextMuted,
+                  style: AppTypography.caption(context).copyWith(
+                    color: context.colors.textMuted,
                   ),
                 ),
                 field,
@@ -122,15 +125,18 @@ class AuthInputCard extends StatelessWidget {
   /// no visible border/fill of its own (the card already draws that), so
   /// the field reads as plain value text under the label rather than a
   /// second nested box.
-  static InputDecoration fieldDecoration({required String hintText}) {
+  static InputDecoration fieldDecoration({
+    required BuildContext context,
+    required String hintText,
+  }) {
     return InputDecoration(
       isDense: true,
       hintText: hintText,
-      hintStyle: AppTypography.bodyMedium.copyWith(
-        color: AppColors.authTextMuted,
+      hintStyle: AppTypography.bodyMedium(context).copyWith(
+        color: context.colors.textMuted,
       ),
-      errorStyle: AppTypography.caption.copyWith(
-        color: AppColors.negative,
+      errorStyle: AppTypography.caption(context).copyWith(
+        color: context.colors.negative,
         height: 0.7,
       ),
       contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),

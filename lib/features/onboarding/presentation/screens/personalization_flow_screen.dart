@@ -88,14 +88,14 @@ class _PersonalizationFlowScreenState
         ..showSnackBar(
           SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.surfaceElevated,
+            backgroundColor: context.colors.surfaceElevated,
             content: Text(
               next,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: context.colors.textPrimary),
             ),
             action: SnackBarAction(
               label: 'Retry',
-              textColor: AppColors.accent,
+              textColor: context.colors.accent,
               onPressed: _finish,
             ),
           ),

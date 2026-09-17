@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../shared/widgets/fade_slide_in.dart';
@@ -8,6 +7,15 @@ import 'onboarding_hero.dart';
 import 'onboarding_indicator.dart';
 import 'onboarding_header.dart';
 import 'onboarding_nav_button.dart';
+
+// This carousel is a deliberately fixed-dark, pre-auth brand composition —
+// like Splash, it does not follow the user's Light/Dark preference (which
+// isn't even set yet at this point in the flow). These mirror the values
+// `AppColorScheme.dark()` uses for background/text/textMuted/accent.
+const _kOnboardingDarkBg = Color(0xFF0E1A15);
+const _kOnboardingLightText = Color(0xFFF5F7F5);
+const _kOnboardingMutedText = Color(0xFF8FA398);
+const _kOnboardingAccent = Color(0xFF35D39A);
 
 /// One page of the pre-login onboarding carousel — a dark, premium
 /// composition shared by all 3 pages (header, eyebrow, headline,
@@ -67,8 +75,8 @@ class OnboardingCarouselPage extends StatelessWidget {
                     children: [
                       Text(
                         eyebrow,
-                        style: AppTypography.caption.copyWith(
-                          color: AppColors.accent,
+                        style: AppTypography.caption(context).copyWith(
+                          color: _kOnboardingAccent,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.4,
                         ),
@@ -76,10 +84,10 @@ class OnboardingCarouselPage extends StatelessWidget {
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         headline,
-                        style: AppTypography.greeting.copyWith(
+                        style: AppTypography.greeting(context).copyWith(
                           fontSize: 27,
                           height: 1.22,
-                          color: AppColors.drawerText,
+                          color: _kOnboardingLightText,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
@@ -87,8 +95,8 @@ class OnboardingCarouselPage extends StatelessWidget {
                         constraints: const BoxConstraints(maxWidth: 300),
                         child: Text(
                           description,
-                          style: AppTypography.body.copyWith(
-                            color: AppColors.drawerTextMuted,
+                          style: AppTypography.body(context).copyWith(
+                            color: _kOnboardingMutedText,
                             height: 1.5,
                           ),
                         ),
@@ -124,9 +132,9 @@ class OnboardingCarouselPage extends StatelessWidget {
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   microcopy,
-                  style: AppTypography.caption.copyWith(
+                  style: AppTypography.caption(context).copyWith(
                     fontSize: 10,
-                    color: AppColors.drawerTextMuted,
+                    color: _kOnboardingMutedText,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.2,
                   ),
@@ -161,9 +169,9 @@ class _CarouselBackground extends StatelessWidget {
           center: const Alignment(0, -0.15),
           radius: 1.2,
           colors: [
-            Color.lerp(AppColors.drawerBackground, AppColors.accent, 0.14)!,
-            Color.lerp(AppColors.drawerBackground, AppColors.accent, 0.05)!,
-            AppColors.drawerBackground,
+            Color.lerp(_kOnboardingDarkBg, _kOnboardingAccent, 0.14)!,
+            Color.lerp(_kOnboardingDarkBg, _kOnboardingAccent, 0.05)!,
+            _kOnboardingDarkBg,
           ],
           stops: const [0, 0.45, 0.85],
         ),

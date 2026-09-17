@@ -144,7 +144,7 @@ void main() {
     },
   );
 
-  testWidgets('"Appearance" is not present on the Profile page', (
+  testWidgets('"Appearance" opens the theme picker bottom sheet', (
     tester,
   ) async {
     await openChat(tester);
@@ -152,7 +152,23 @@ void main() {
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Appearance'), findsNothing);
+    final appearanceRow = find.text('Appearance');
+    await tester.dragUntilVisible(
+      appearanceRow,
+      find.byType(ListView),
+      const Offset(0, -200),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(appearanceRow);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Choose how FinAssist looks'), findsOneWidget);
+    // "System" also matches the Appearance row's own current-value subtitle
+    // underneath the sheet, so at least one (not exactly one) is expected.
+    expect(find.text('System'), findsAtLeastNWidgets(1));
+    expect(find.text('Light'), findsOneWidget);
+    expect(find.text('Dark'), findsOneWidget);
   });
 
   testWidgets(

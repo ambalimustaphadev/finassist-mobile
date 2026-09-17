@@ -62,7 +62,7 @@ class MainHeaderBar extends ConsumerWidget {
               children: [
                 Text(
                   'FinAssist',
-                  style: AppTypography.screenTitle,
+                  style: AppTypography.screenTitle(context),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -105,7 +105,7 @@ class BrandTagline extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       'Your financial AI companion',
-      style: AppTypography.caption,
+      style: AppTypography.caption(context),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
@@ -145,7 +145,7 @@ class _HeaderIconButton extends StatelessWidget {
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Icon(icon, color: AppColors.textPrimary),
+            child: Icon(icon, color: context.colors.textPrimary),
           ),
         ),
       ),

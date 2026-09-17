@@ -18,7 +18,7 @@ class AuthCheckbox extends StatelessWidget {
     return Icon(
       value ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
       size: size,
-      color: value ? AppColors.accentDeep : AppColors.authTextMuted,
+      color: value ? context.colors.accentStrong : context.colors.textMuted,
     );
   }
 }

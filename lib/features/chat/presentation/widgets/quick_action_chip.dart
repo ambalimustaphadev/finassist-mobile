@@ -15,7 +15,7 @@ class QuickActionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceElevated,
+      color: context.colors.surfaceElevated,
       borderRadius: BorderRadius.circular(AppRadius.pill),
       child: InkWell(
         onTap: onTap,
@@ -27,19 +27,19 @@ class QuickActionChip extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(color: AppColors.borderSubtle),
+            border: Border.all(color: context.colors.borderSubtle),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(action.icon, size: 15, color: AppColors.accent),
+              Icon(action.icon, size: 15, color: context.colors.accent),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
                   action.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodyMedium,
+                  style: AppTypography.bodyMedium(context),
                 ),
               ),
             ],

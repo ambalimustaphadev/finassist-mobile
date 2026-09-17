@@ -37,7 +37,7 @@ class FinAssistRobotAvatar extends StatelessWidget {
             height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.onboardingMintTint,
+              color: context.colors.accentSoft,
             ),
           ),
           // Antenna.
@@ -47,7 +47,7 @@ class FinAssistRobotAvatar extends StatelessWidget {
               width: 3,
               height: size * 0.12,
               decoration: BoxDecoration(
-                color: AppColors.accentDeep,
+                color: context.colors.accentStrong,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -57,9 +57,9 @@ class FinAssistRobotAvatar extends StatelessWidget {
             child: Container(
               width: 7,
               height: 7,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.accent,
+                color: context.colors.accent,
               ),
             ),
           ),
@@ -69,7 +69,7 @@ class FinAssistRobotAvatar extends StatelessWidget {
             height: faceSize * 0.82,
             margin: EdgeInsets.only(top: size * 0.14),
             decoration: BoxDecoration(
-              color: AppColors.onboardingHeading,
+              color: context.colors.textPrimary,
               borderRadius: BorderRadius.circular(faceSize * 0.28),
             ),
             child: Row(
@@ -90,9 +90,9 @@ class FinAssistRobotAvatar extends StatelessWidget {
                 height: size * 0.32,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.accent,
+                  color: context.colors.accent,
                   border: Border.all(
-                    color: AppColors.onboardingBackground,
+                    color: context.colors.background,
                     width: 2.5,
                   ),
                 ),
@@ -100,7 +100,7 @@ class FinAssistRobotAvatar extends StatelessWidget {
                 child: Icon(
                   Icons.check_rounded,
                   size: size * 0.18,
-                  color: AppColors.onboardingHeading,
+                  color: context.colors.textOnAccent,
                 ),
               ),
             ),
@@ -120,9 +120,13 @@ class _Eye extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white,
+        // The face uses context.colors.textPrimary (dark in Light mode,
+        // light in Dark mode) — the eyes need to contrast against *that*,
+        // not be hardcoded white, or they'd vanish against a light face
+        // in Dark mode.
+        color: context.colors.background,
       ),
     );
   }

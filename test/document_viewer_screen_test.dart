@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:finassist/app/theme/app_theme.dart';
 import 'package:finassist/shared/widgets/document_viewer_screen.dart';
 
 void main() {
@@ -12,6 +13,7 @@ void main() {
   }) {
     return tester.pumpWidget(
       MaterialApp(
+        theme: AppTheme.light,
         home: DocumentViewerScreen(
           fileUrl: fileUrl,
           filename: filename,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
+// Fixed-dark, pre-auth brand composition — see onboarding_carousel_page.dart.
+const _kOnboardingMutedText = Color(0xFF8FA398);
+const _kOnboardingAccent = Color(0xFF35D39A);
 
 /// Pagination dots for the onboarding carousel — fixed-size circles that
 /// only change color (never width) when active, matching the reference
@@ -30,8 +32,8 @@ class OnboardingIndicator extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: i == activeIndex
-                  ? AppColors.accent
-                  : AppColors.drawerTextMuted.withValues(alpha: 0.35),
+                  ? _kOnboardingAccent
+                  : _kOnboardingMutedText.withValues(alpha: 0.35),
             ),
           ),
         ],

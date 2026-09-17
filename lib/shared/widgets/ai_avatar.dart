@@ -16,13 +16,15 @@ class AIAvatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.accent.withValues(alpha: 0.12),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.5)),
+        color: context.colors.accent.withValues(alpha: 0.12),
+        border: Border.all(
+          color: context.colors.accent.withValues(alpha: 0.5),
+        ),
       ),
       alignment: Alignment.center,
       child: Icon(
         Icons.auto_awesome_rounded,
-        color: AppColors.accent,
+        color: context.colors.accent,
         size: size * 0.5,
       ),
     );

@@ -81,7 +81,7 @@ class _FilterSheetState extends State<_FilterSheet> {
         margin: const EdgeInsets.all(AppSpacing.md),
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
+          color: context.colors.surfaceElevated,
           borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
         child: Column(
@@ -91,16 +91,19 @@ class _FilterSheetState extends State<_FilterSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Filter subscriptions', style: AppTypography.sectionHeading),
+                Text(
+                  'Filter subscriptions',
+                  style: AppTypography.sectionHeading(context),
+                ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close_rounded),
-                  color: AppColors.textMuted,
+                  color: context.colors.textMuted,
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text('Status', style: AppTypography.bodyMedium),
+            Text('Status', style: AppTypography.bodyMedium(context)),
             const SizedBox(height: AppSpacing.sm),
             Wrap(
               spacing: AppSpacing.sm,
@@ -169,8 +172,8 @@ class _FilterSheetState extends State<_FilterSheet> {
                 }),
                 child: Text(
                   'Clear all',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AppTypography.bodyMedium(context).copyWith(
+                    color: context.colors.textSecondary,
                   ),
                 ),
               ),
@@ -204,13 +207,15 @@ class _StatusChip extends StatelessWidget {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: selected ? AppColors.accentDeep : AppColors.surface,
+          color: selected ? context.colors.accent : context.colors.surface,
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           label,
-          style: AppTypography.bodyMedium.copyWith(
-            color: selected ? Colors.white : AppColors.textPrimary,
+          style: AppTypography.bodyMedium(context).copyWith(
+            color: selected
+                ? context.colors.textOnAccent
+                : context.colors.textPrimary,
           ),
         ),
       ),
@@ -240,20 +245,22 @@ class _DropdownRow<T extends Object> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.bodyMedium),
+        Text(label, style: AppTypography.bodyMedium(context)),
         const SizedBox(height: AppSpacing.xs),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T?>(
               value: value,
               isExpanded: true,
-              dropdownColor: AppColors.surfaceElevated,
-              style: AppTypography.body.copyWith(color: AppColors.textPrimary),
+              dropdownColor: context.colors.surfaceElevated,
+              style: AppTypography.body(
+                context,
+              ).copyWith(color: context.colors.textPrimary),
               items: [
                 DropdownMenuItem<T?>(value: null, child: Text(placeholder)),
                 for (final item in items)

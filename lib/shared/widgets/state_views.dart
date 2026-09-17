@@ -30,19 +30,21 @@ class EmptyStateView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppColors.textMuted, size: 32),
+          Icon(icon, color: context.colors.textMuted, size: 32),
           const SizedBox(height: AppSpacing.md),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: AppTypography.bodyMedium,
+            style: AppTypography.bodyMedium(context),
           ),
           if (message != null) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
               message!,
               textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(color: AppColors.textMuted),
+              style: AppTypography.body(
+                context,
+              ).copyWith(color: context.colors.textMuted),
             ),
           ],
           if (actionLabel != null && onAction != null) ...[
@@ -51,9 +53,9 @@ class EmptyStateView extends StatelessWidget {
               onPressed: onAction,
               child: Text(
                 actionLabel!,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.accent,
-                ),
+                style: AppTypography.bodyMedium(
+                  context,
+                ).copyWith(color: context.colors.accent),
               ),
             ),
           ],
@@ -74,9 +76,9 @@ class LoadingStateView extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: height,
-      child: const Center(
+      child: Center(
         child: CircularProgressIndicator(
-          color: AppColors.accent,
+          color: context.colors.accent,
           strokeWidth: 2.5,
         ),
       ),
@@ -103,22 +105,26 @@ class ErrorStateView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline_rounded,
-            color: AppColors.textMuted,
+            color: context.colors.textMuted,
             size: 32,
           ),
           const SizedBox(height: AppSpacing.md),
-          Text(message, textAlign: TextAlign.center, style: AppTypography.body),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppTypography.body(context),
+          ),
           if (onRetry != null) ...[
             const SizedBox(height: AppSpacing.lg),
             TextButton(
               onPressed: onRetry,
               child: Text(
                 'Try again',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.accent,
-                ),
+                style: AppTypography.bodyMedium(
+                  context,
+                ).copyWith(color: context.colors.accent),
               ),
             ),
           ],

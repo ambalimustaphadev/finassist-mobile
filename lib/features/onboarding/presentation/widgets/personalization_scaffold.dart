@@ -48,7 +48,7 @@ class PersonalizationScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.onboardingBackground,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -75,8 +75,8 @@ class PersonalizationScaffold extends StatelessWidget {
                           if (eyebrow != null) ...[
                             Text(
                               eyebrow!,
-                              style: AppTypography.caption.copyWith(
-                                color: AppColors.accentDeep,
+                              style: AppTypography.caption(context).copyWith(
+                                color: context.colors.accentStrong,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 1.2,
                               ),
@@ -85,16 +85,16 @@ class PersonalizationScaffold extends StatelessWidget {
                           ],
                           Text(
                             title,
-                            style: AppTypography.greeting.copyWith(
+                            style: AppTypography.greeting(context).copyWith(
                               fontSize: 26,
-                              color: AppColors.onboardingHeading,
+                              color: context.colors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
                             subtitle,
-                            style: AppTypography.body.copyWith(
-                              color: AppColors.onboardingBodyMuted,
+                            style: AppTypography.body(context).copyWith(
+                              color: context.colors.textSecondary,
                               fontSize: 14.5,
                             ),
                           ),
@@ -154,8 +154,8 @@ class PersonalizationContinueButton extends StatelessWidget {
       width: double.infinity,
       child: Material(
         color: enabled
-            ? AppColors.accentDeep
-            : AppColors.accentDeep.withValues(alpha: 0.5),
+            ? context.colors.accent
+            : context.colors.accent.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         child: InkWell(
           key: Key('personalization-continue-$step'),
@@ -165,12 +165,12 @@ class PersonalizationContinueButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             child: Center(
               child: isSaving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        color: Colors.white,
+                        color: context.colors.textOnAccent,
                       ),
                     )
                   : Row(
@@ -178,15 +178,15 @@ class PersonalizationContinueButton extends StatelessWidget {
                       children: [
                         Text(
                           label,
-                          style: AppTypography.buttonLabel.copyWith(
-                            color: Colors.white,
+                          style: AppTypography.buttonLabel(context).copyWith(
+                            color: context.colors.textOnAccent,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
-                        const Icon(
+                        Icon(
                           Icons.arrow_forward_rounded,
                           size: 18,
-                          color: Colors.white,
+                          color: context.colors.textOnAccent,
                         ),
                       ],
                     ),

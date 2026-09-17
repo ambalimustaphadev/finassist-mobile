@@ -30,52 +30,52 @@ class _ToolEntry {
   final WidgetBuilder builder;
 }
 
-final _tools = <_ToolEntry>[
+List<_ToolEntry> _tools(BuildContext context) => <_ToolEntry>[
   _ToolEntry(
     icon: Icons.pie_chart_rounded,
-    iconColor: AppColors.categoryTransfers,
+    iconColor: context.colors.categoryTransfers,
     title: 'Budget Planner',
     subtitle: '50/30/20 income split',
     builder: (_) => const BudgetPlannerScreen(),
   ),
   _ToolEntry(
     icon: Icons.savings_rounded,
-    iconColor: AppColors.accentStrong,
+    iconColor: context.colors.accentStrong,
     title: 'Savings Calculator',
     subtitle: 'See how long it will take to reach your goal',
     builder: (_) => const SavingsCalculatorScreen(),
   ),
   _ToolEntry(
     icon: Icons.request_quote_rounded,
-    iconColor: AppColors.categoryBills,
+    iconColor: context.colors.categoryBills,
     title: 'Loan Calculator',
     subtitle: 'Estimate payments and interest',
     builder: (_) => const LoanCalculatorScreen(),
   ),
   _ToolEntry(
     icon: Icons.currency_exchange_rounded,
-    iconColor: AppColors.categoryShopping,
+    iconColor: context.colors.categoryShopping,
     title: 'Currency Converter',
     subtitle: 'Convert between currencies',
     builder: (_) => const CurrencyConverterScreen(),
   ),
   _ToolEntry(
     icon: Icons.home_work_rounded,
-    iconColor: AppColors.categoryFood,
+    iconColor: context.colors.categoryFood,
     title: 'Affordability Calculator',
     subtitle: 'What you can comfortably take on',
     builder: (_) => const AffordabilityCalculatorScreen(),
   ),
   _ToolEntry(
     icon: Icons.trending_up_rounded,
-    iconColor: AppColors.accent,
+    iconColor: context.colors.accent,
     title: 'Investment Calculator',
     subtitle: 'Explore potential returns',
     builder: (_) => const CompoundGrowthCalculatorScreen(),
   ),
   _ToolEntry(
     icon: Icons.account_balance_wallet_rounded,
-    iconColor: AppColors.categoryOthers,
+    iconColor: context.colors.categoryOthers,
     title: 'Salary/Budget Planner',
     subtitle: 'Gross salary to take-home pay',
     builder: (_) => const SalaryBudgetPlannerScreen(),
@@ -90,8 +90,9 @@ class ToolsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tools = _tools(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       drawer: const ChatDrawer(),
       body: SafeArea(
         child: Column(
@@ -125,11 +126,11 @@ class ToolsScreen extends StatelessWidget {
                             ),
                             child: Text(
                               'Calculate',
-                              style: AppTypography.sectionHeading,
+                              style: AppTypography.sectionHeading(context),
                             ),
                           );
                         }
-                        final entry = _tools[index - 1];
+                        final entry = tools[index - 1];
                         return Padding(
                           padding: const EdgeInsets.only(
                             bottom: AppSpacing.lg,
@@ -144,7 +145,7 @@ class ToolsScreen extends StatelessWidget {
                             ).push(MaterialPageRoute(builder: entry.builder)),
                           ),
                         );
-                      }, childCount: _tools.length + 1),
+                      }, childCount: tools.length + 1),
                     ),
                   ),
                 ],
@@ -165,9 +166,12 @@ class _ToolsHeading extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Financial tools', style: AppTypography.greeting),
+        Text('Financial tools', style: AppTypography.greeting(context)),
         const SizedBox(height: AppSpacing.xs),
-        Text('Simple tools for smarter decisions.', style: AppTypography.body),
+        Text(
+          'Simple tools for smarter decisions.',
+          style: AppTypography.body(context),
+        ),
       ],
     );
   }

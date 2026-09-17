@@ -22,12 +22,12 @@ Future<bool> showConfirmActionDialog(
   final result = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      backgroundColor: AppColors.surfaceElevated,
+      backgroundColor: context.colors.surfaceElevated,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
-      title: Text(title, style: AppTypography.sectionHeading),
-      content: Text(message, style: AppTypography.body),
+      title: Text(title, style: AppTypography.sectionHeading(context)),
+      content: Text(message, style: AppTypography.body(context)),
       actionsPadding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
         0,
@@ -39,17 +39,19 @@ Future<bool> showConfirmActionDialog(
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(
             cancelLabel,
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTypography.bodyMedium(
+              context,
+            ).copyWith(color: context.colors.textSecondary),
           ),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
             confirmLabel,
-            style: AppTypography.bodyMedium.copyWith(
-              color: isDestructive ? AppColors.negative : AppColors.accent,
+            style: AppTypography.bodyMedium(context).copyWith(
+              color: isDestructive
+                  ? context.colors.negative
+                  : context.colors.accent,
               fontWeight: FontWeight.w700,
             ),
           ),

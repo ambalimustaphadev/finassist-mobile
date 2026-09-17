@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
+import '../splash_colors.dart';
 import '../splash_timeline.dart';
 
 /// Slow, flowing green/teal wave ribbons near the bottom of the screen,
@@ -60,7 +60,7 @@ class _WavesPainter extends CustomPainter {
       amplitude: 0.05,
       speed: 0.55,
       phase: 0.0,
-      colors: AppColors.ctaGradient,
+      colors: kSplashCtaGradient,
       alpha: 0.22,
     ),
     _RibbonSpec(
@@ -68,7 +68,7 @@ class _WavesPainter extends CustomPainter {
       amplitude: 0.04,
       speed: 0.4,
       phase: 0.9,
-      colors: const [AppColors.accentStrong, AppColors.accent],
+      colors: const [kSplashAccentStrong, kSplashAccent],
       alpha: 0.16,
     ),
   ];

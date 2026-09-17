@@ -8,12 +8,12 @@ import '../../../../shared/widgets/icon_badge.dart';
 /// The selected-vs-unselected card treatment every option row shares: an
 /// emerald border + pale mint surface when selected, a plain white/light
 /// card with a gray border otherwise.
-BoxDecoration _selectionDecoration(bool selected) {
+BoxDecoration _selectionDecoration(BuildContext context, bool selected) {
   return BoxDecoration(
-    color: selected ? AppColors.onboardingMintTint : AppColors.authSurface,
+    color: selected ? context.colors.accentSoft : context.colors.surface,
     borderRadius: BorderRadius.circular(AppRadius.md),
     border: Border.all(
-      color: selected ? AppColors.accentDeep : AppColors.authInputBorder,
+      color: selected ? context.colors.accentStrong : context.colors.border,
       width: selected ? 1.5 : 1,
     ),
   );
@@ -60,12 +60,12 @@ class PersonalizationOptionRow extends StatelessWidget {
             horizontal: AppSpacing.md,
             vertical: AppSpacing.md,
           ),
-          decoration: _selectionDecoration(selected),
+          decoration: _selectionDecoration(context, selected),
           child: Row(
             children: [
               IconBadge(
                 icon: icon,
-                color: AppColors.accentDeep,
+                color: context.colors.accentStrong,
                 size: 36,
                 iconSize: 18,
               ),
@@ -76,16 +76,16 @@ class PersonalizationOptionRow extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.authTextPrimary,
+                      style: AppTypography.bodyMedium(context).copyWith(
+                        color: context.colors.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
                       subtitle,
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.onboardingBodyMuted,
-                      ),
+                      style: AppTypography.caption(
+                        context,
+                      ).copyWith(color: context.colors.textSecondary),
                     ),
                   ],
                 ),
@@ -118,15 +118,19 @@ class _SelectionIndicator extends StatelessWidget {
       decoration: BoxDecoration(
         shape: shape,
         borderRadius: multiSelect ? BorderRadius.circular(6) : null,
-        color: selected ? AppColors.accentDeep : Colors.transparent,
+        color: selected ? context.colors.accent : Colors.transparent,
         border: Border.all(
-          color: selected ? AppColors.accentDeep : AppColors.authInputBorder,
+          color: selected ? context.colors.accent : context.colors.border,
           width: 1.5,
         ),
       ),
       alignment: Alignment.center,
       child: selected
-          ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
+          ? Icon(
+              Icons.check_rounded,
+              size: 14,
+              color: context.colors.textOnAccent,
+            )
           : null,
     );
   }
@@ -159,15 +163,15 @@ class PersonalizationToggleRow extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.authSurface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.authInputBorder),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
           IconBadge(
             icon: icon,
-            color: AppColors.accentDeep,
+            color: context.colors.accentStrong,
             size: 36,
             iconSize: 18,
           ),
@@ -178,16 +182,16 @@ class PersonalizationToggleRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.authTextPrimary,
+                  style: AppTypography.bodyMedium(context).copyWith(
+                    color: context.colors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   subtitle,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.onboardingBodyMuted,
-                  ),
+                  style: AppTypography.caption(
+                    context,
+                  ).copyWith(color: context.colors.textSecondary),
                 ),
               ],
             ),
@@ -195,7 +199,7 @@ class PersonalizationToggleRow extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: AppColors.accent,
+            activeThumbColor: context.colors.accent,
           ),
         ],
       ),

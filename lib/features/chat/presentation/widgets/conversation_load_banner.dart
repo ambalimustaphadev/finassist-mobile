@@ -25,33 +25,33 @@ class ConversationLoadBanner extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.cloud_off_rounded,
-              color: AppColors.textMuted,
+              color: context.colors.textMuted,
               size: 32,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: AppTypography.body,
+              style: AppTypography.body(context),
             ),
             const SizedBox(height: AppSpacing.lg),
             Material(
-              color: AppColors.surfaceElevated,
+              color: context.colors.surfaceElevated,
               borderRadius: BorderRadius.circular(AppRadius.pill),
               child: InkWell(
                 onTap: onRetry,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.lg,
                     vertical: AppSpacing.sm,
                   ),
                   child: Text(
                     'Try again',
                     style: TextStyle(
-                      color: AppColors.accent,
+                      color: context.colors.accent,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),

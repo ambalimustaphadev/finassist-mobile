@@ -21,16 +21,16 @@ class AuthHeader extends StatelessWidget {
       children: [
         Text(
           title,
-          style: AppTypography.greeting.copyWith(
+          style: AppTypography.greeting(context).copyWith(
             fontSize: 30,
-            color: AppColors.onboardingHeading,
+            color: context.colors.textPrimary,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
           subtitle,
-          style: AppTypography.body.copyWith(
-            color: AppColors.onboardingBodyMuted,
+          style: AppTypography.body(context).copyWith(
+            color: context.colors.textSecondary,
             fontSize: 15,
           ),
         ),

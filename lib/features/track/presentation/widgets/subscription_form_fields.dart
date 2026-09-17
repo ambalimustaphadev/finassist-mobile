@@ -5,13 +5,19 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 
-InputDecoration _fieldDecoration({String? hintText, String? errorText}) {
+InputDecoration _fieldDecoration(
+  BuildContext context, {
+  String? hintText,
+  String? errorText,
+}) {
   return InputDecoration(
     hintText: hintText,
-    hintStyle: AppTypography.body.copyWith(color: AppColors.textMuted),
+    hintStyle: AppTypography.body(context).copyWith(
+      color: context.colors.textMuted,
+    ),
     errorText: errorText,
     filled: true,
-    fillColor: AppColors.surface,
+    fillColor: context.colors.surface,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.md),
       borderSide: BorderSide.none,
@@ -54,15 +60,21 @@ class SubscriptionTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.bodyMedium),
+        Text(label, style: AppTypography.bodyMedium(context)),
         const SizedBox(height: AppSpacing.xs),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
           textCapitalization: textCapitalization,
           maxLines: maxLines,
-          style: AppTypography.body.copyWith(color: AppColors.textPrimary),
-          decoration: _fieldDecoration(hintText: hintText, errorText: errorText),
+          style: AppTypography.body(
+            context,
+          ).copyWith(color: context.colors.textPrimary),
+          decoration: _fieldDecoration(
+            context,
+            hintText: hintText,
+            errorText: errorText,
+          ),
         ),
       ],
     );
@@ -91,20 +103,22 @@ class SubscriptionDropdownField<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.bodyMedium),
+        Text(label, style: AppTypography.bodyMedium(context)),
         const SizedBox(height: AppSpacing.xs),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T>(
               value: value,
               isExpanded: true,
-              dropdownColor: AppColors.surfaceElevated,
-              style: AppTypography.body.copyWith(color: AppColors.textPrimary),
+              dropdownColor: context.colors.surfaceElevated,
+              style: AppTypography.body(
+                context,
+              ).copyWith(color: context.colors.textPrimary),
               items: [
                 for (final item in items)
                   DropdownMenuItem(value: item, child: Text(labelOf(item))),
@@ -146,10 +160,10 @@ class SubscriptionDateField extends StatelessWidget {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppColors.accentDeep,
-              onPrimary: Colors.white,
-              surface: AppColors.surface,
-              onSurface: AppColors.textPrimary,
+              primary: context.colors.accent,
+              onPrimary: context.colors.textOnAccent,
+              surface: context.colors.surface,
+              onSurface: context.colors.textPrimary,
             ),
           ),
           child: child!,
@@ -164,7 +178,7 @@ class SubscriptionDateField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.bodyMedium),
+        Text(label, style: AppTypography.bodyMedium(context)),
         const SizedBox(height: AppSpacing.xs),
         InkWell(
           onTap: () => _pick(context),
@@ -176,10 +190,10 @@ class SubscriptionDateField extends StatelessWidget {
               vertical: AppSpacing.md,
             ),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.colors.surface,
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: errorText != null
-                  ? Border.all(color: AppColors.negative)
+                  ? Border.all(color: context.colors.negative)
                   : null,
             ),
             child: Row(
@@ -187,17 +201,17 @@ class SubscriptionDateField extends StatelessWidget {
                 Icon(
                   Icons.calendar_today_rounded,
                   size: 16,
-                  color: AppColors.textMuted,
+                  color: context.colors.textMuted,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   date == null
                       ? 'Select date'
                       : DateFormat('MMMM d, yyyy').format(date!),
-                  style: AppTypography.body.copyWith(
+                  style: AppTypography.body(context).copyWith(
                     color: date == null
-                        ? AppColors.textMuted
-                        : AppColors.textPrimary,
+                        ? context.colors.textMuted
+                        : context.colors.textPrimary,
                   ),
                 ),
               ],
@@ -208,7 +222,9 @@ class SubscriptionDateField extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             errorText!,
-            style: AppTypography.caption.copyWith(color: AppColors.negative),
+            style: AppTypography.caption(
+              context,
+            ).copyWith(color: context.colors.negative),
           ),
         ],
       ],

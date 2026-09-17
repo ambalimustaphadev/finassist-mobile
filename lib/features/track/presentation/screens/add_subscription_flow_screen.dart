@@ -154,7 +154,7 @@ class _AddSubscriptionFlowScreenState
   Widget build(BuildContext context) {
     if (_stage == _Stage.success) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         body: SafeArea(child: _SuccessView(
           subscription: _created!,
           onViewSubscription: () => Navigator.of(context).pushReplacement(
@@ -170,9 +170,9 @@ class _AddSubscriptionFlowScreenState
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
         leading: IconButton(
           onPressed: _handleBack,
@@ -180,7 +180,7 @@ class _AddSubscriptionFlowScreenState
         ),
         title: Text(
           _stage == _Stage.review ? 'Review subscription' : 'Add subscription',
-          style: AppTypography.screenTitle,
+          style: AppTypography.screenTitle(context),
         ),
       ),
       body: SafeArea(
@@ -260,8 +260,8 @@ class _StepHeader extends StatelessWidget {
               child: Container(
                 height: 2,
                 color: i <= currentIndex
-                    ? AppColors.accentDeep
-                    : AppColors.border,
+                    ? context.colors.accent
+                    : context.colors.border,
               ),
             ),
           Column(
@@ -272,18 +272,22 @@ class _StepHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: i <= currentIndex
-                      ? AppColors.accentDeep
-                      : AppColors.surfaceHighlight,
+                      ? context.colors.accent
+                      : context.colors.surfaceHighlight,
                 ),
                 alignment: Alignment.center,
                 child: i < currentIndex
-                    ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+                    ? Icon(
+                        Icons.check_rounded,
+                        size: 16,
+                        color: context.colors.textOnAccent,
+                      )
                     : Text(
                         '${i + 1}',
-                        style: AppTypography.caption.copyWith(
+                        style: AppTypography.caption(context).copyWith(
                           color: i == currentIndex
-                              ? Colors.white
-                              : AppColors.textMuted,
+                              ? context.colors.textOnAccent
+                              : context.colors.textMuted,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -291,10 +295,10 @@ class _StepHeader extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 _labels[i],
-                style: AppTypography.caption.copyWith(
+                style: AppTypography.caption(context).copyWith(
                   color: i <= currentIndex
-                      ? AppColors.textPrimary
-                      : AppColors.textMuted,
+                      ? context.colors.textPrimary
+                      : context.colors.textMuted,
                 ),
               ),
             ],
@@ -409,7 +413,10 @@ class _DetailsStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Additional details (optional)', style: AppTypography.bodyMedium),
+        Text(
+          'Additional details (optional)',
+          style: AppTypography.bodyMedium(context),
+        ),
         const SizedBox(height: AppSpacing.md),
         SubscriptionDropdownField<SubscriptionCategory?>(
           label: 'Category',
@@ -486,9 +493,9 @@ class _ReviewStep extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.colors.surface,
             borderRadius: BorderRadius.circular(AppRadius.xl),
-            border: Border.all(color: AppColors.borderSubtle),
+            border: Border.all(color: context.colors.borderSubtle),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,12 +505,12 @@ class _ReviewStep extends StatelessWidget {
                   SubscriptionIcon(name: name, category: category, size: 48),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: Text(name, style: AppTypography.sectionHeading),
+                    child: Text(name, style: AppTypography.sectionHeading(context)),
                   ),
                   const SubscriptionStatusBadge(status: SubscriptionStatus.active),
                 ],
               ),
-              const Divider(height: AppSpacing.xxl, color: AppColors.border),
+              Divider(height: AppSpacing.xxl, color: context.colors.border),
               _ReviewRow(label: 'Amount', value: formatCurrency(amount, symbol)),
               _ReviewRow(label: 'Frequency', value: frequency.label),
               _ReviewRow(
@@ -523,7 +530,9 @@ class _ReviewStep extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             saveError!,
-            style: AppTypography.body.copyWith(color: AppColors.negative),
+            style: AppTypography.body(
+              context,
+            ).copyWith(color: context.colors.negative),
           ),
         ],
         const SizedBox(height: AppSpacing.xl),
@@ -550,11 +559,11 @@ class _ReviewRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTypography.body),
+          Text(label, style: AppTypography.body(context)),
           Flexible(
             child: Text(
               value,
-              style: AppTypography.bodyMedium,
+              style: AppTypography.bodyMedium(context),
               textAlign: TextAlign.right,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -587,24 +596,24 @@ class _SuccessView extends StatelessWidget {
           Container(
             width: 120,
             height: 120,
-            decoration: const BoxDecoration(
-              color: AppColors.onboardingMintTint,
+            decoration: BoxDecoration(
+              color: context.colors.accentSoft,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: const Icon(
+            child: Icon(
               Icons.check_rounded,
               size: 52,
-              color: AppColors.accentStrong,
+              color: context.colors.accentStrong,
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          Text('Subscription added', style: AppTypography.greeting),
+          Text('Subscription added', style: AppTypography.greeting(context)),
           const SizedBox(height: AppSpacing.sm),
           Text(
             '${subscription.name} has been added to your subscriptions.',
             textAlign: TextAlign.center,
-            style: AppTypography.body,
+            style: AppTypography.body(context),
           ),
           const SizedBox(height: AppSpacing.xxxl),
           SubscriptionPrimaryButton(
@@ -618,8 +627,8 @@ class _SuccessView extends StatelessWidget {
               onPressed: onAddAnother,
               child: Text(
                 'Add another',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                style: AppTypography.bodyMedium(context).copyWith(
+                  color: context.colors.textSecondary,
                 ),
               ),
             ),

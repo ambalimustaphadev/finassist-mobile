@@ -36,8 +36,11 @@ class SubscriptionDetailScreen extends ConsumerWidget {
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surfaceElevated,
-          content: Text(message, style: const TextStyle(color: AppColors.textPrimary)),
+          backgroundColor: context.colors.surfaceElevated,
+          content: Text(
+            message,
+            style: TextStyle(color: context.colors.textPrimary),
+          ),
         ),
       );
   }
@@ -105,8 +108,11 @@ class SubscriptionDetailScreen extends ConsumerWidget {
 
     if (subscription == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(backgroundColor: AppColors.background, elevation: 0),
+        backgroundColor: context.colors.background,
+        appBar: AppBar(
+          backgroundColor: context.colors.background,
+          elevation: 0,
+        ),
         body: const Center(child: Text('This subscription is no longer available.')),
       );
     }
@@ -115,11 +121,11 @@ class SubscriptionDetailScreen extends ConsumerWidget {
     final nextDate = nextOccurrence(subscription.nextBillingDate, subscription.frequency);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Subscription', style: AppTypography.screenTitle),
+        title: Text('Subscription', style: AppTypography.screenTitle(context)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).push(
@@ -129,7 +135,9 @@ class SubscriptionDetailScreen extends ConsumerWidget {
             ),
             child: Text(
               'Edit',
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.accentDeep),
+              style: AppTypography.bodyMedium(
+                context,
+              ).copyWith(color: context.colors.accentStrong),
             ),
           ),
           IconButton(
@@ -154,7 +162,10 @@ class SubscriptionDetailScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(subscription.name, style: AppTypography.sectionHeading),
+                      Text(
+                        subscription.name,
+                        style: AppTypography.sectionHeading(context),
+                      ),
                       const SizedBox(height: AppSpacing.xs),
                       SubscriptionStatusBadge(status: subscription.status),
                     ],
@@ -168,12 +179,14 @@ class SubscriptionDetailScreen extends ConsumerWidget {
                 children: [
                   Text(
                     formatCurrency(subscription.amount, symbol),
-                    style: AppTypography.financialNumberLarge,
+                    style: AppTypography.financialNumberLarge(context),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'per ${subscription.frequency.shortUnit}',
-                    style: AppTypography.body.copyWith(color: AppColors.textMuted),
+                    style: AppTypography.body(
+                      context,
+                    ).copyWith(color: context.colors.textMuted),
                   ),
                 ],
               ),
@@ -182,9 +195,9 @@ class SubscriptionDetailScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.xl),
-                border: Border.all(color: AppColors.borderSubtle),
+                border: Border.all(color: context.colors.borderSubtle),
               ),
               child: Column(
                 children: [
@@ -211,7 +224,7 @@ class SubscriptionDetailScreen extends ConsumerWidget {
                       icon: Icons.link_rounded,
                       label: 'Website',
                       value: subscription.website!,
-                      valueColor: AppColors.accentDeep,
+                      valueColor: context.colors.accentStrong,
                       onTap: () => _openWebsite(subscription.website!),
                     ),
                   if (subscription.notes != null && subscription.notes!.isNotEmpty)
@@ -262,9 +275,9 @@ class _DetailRow extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 18, color: AppColors.textMuted),
+            Icon(icon, size: 18, color: context.colors.textMuted),
             const SizedBox(width: AppSpacing.sm),
-            Text(label, style: AppTypography.body),
+            Text(label, style: AppTypography.body(context)),
             const Spacer(),
             Flexible(
               child: Column(
@@ -272,13 +285,17 @@ class _DetailRow extends StatelessWidget {
                 children: [
                   Text(
                     value,
-                    style: AppTypography.bodyMedium.copyWith(color: valueColor),
+                    style: AppTypography.bodyMedium(
+                      context,
+                    ).copyWith(color: valueColor),
                     textAlign: TextAlign.right,
                   ),
                   if (trailing != null)
                     Text(
                       trailing!,
-                      style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+                      style: AppTypography.caption(
+                        context,
+                      ).copyWith(color: context.colors.textMuted),
                     ),
                 ],
               ),

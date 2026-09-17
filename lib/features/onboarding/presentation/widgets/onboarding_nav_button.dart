@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+
+// Fixed-dark, pre-auth brand composition — see onboarding_carousel_page.dart.
+const _kOnboardingAccent = Color(0xFF35D39A);
 
 /// The large circular mint "next" button used on onboarding pages 1–2 —
 /// deliberately custom (not a default `FloatingActionButton`) so shadow,
@@ -23,10 +25,10 @@ class OnboardingArrowButton extends StatelessWidget {
       button: true,
       label: semanticLabel,
       child: Material(
-        color: AppColors.accent,
+        color: _kOnboardingAccent,
         shape: const CircleBorder(),
         elevation: 6,
-        shadowColor: AppColors.accent.withValues(alpha: 0.4),
+        shadowColor: _kOnboardingAccent.withValues(alpha: 0.4),
         child: InkWell(
           onTap: onTap,
           customBorder: const CircleBorder(),
@@ -65,10 +67,10 @@ class OnboardingGetStartedButton extends StatelessWidget {
       button: true,
       label: label,
       child: Material(
-        color: AppColors.accent,
+        color: _kOnboardingAccent,
         borderRadius: BorderRadius.circular(AppRadius.pill),
         elevation: 6,
-        shadowColor: AppColors.accent.withValues(alpha: 0.4),
+        shadowColor: _kOnboardingAccent.withValues(alpha: 0.4),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -82,7 +84,7 @@ class OnboardingGetStartedButton extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: AppTypography.buttonLabel.copyWith(
+                  style: AppTypography.buttonLabel(context).copyWith(
                     color: const Color(0xFF0E1A15),
                     fontWeight: FontWeight.w700,
                   ),

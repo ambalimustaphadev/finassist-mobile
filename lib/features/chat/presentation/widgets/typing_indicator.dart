@@ -46,7 +46,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
               vertical: AppSpacing.md,
             ),
             decoration: BoxDecoration(
-              color: AppColors.surfaceElevated,
+              color: context.colors.surfaceElevated,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(AppRadius.lg),
@@ -59,7 +59,10 @@ class _TypingIndicatorState extends State<TypingIndicator>
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (widget.statusLabel != null) ...[
-                  Text(widget.statusLabel!, style: AppTypography.caption),
+                  Text(
+                    widget.statusLabel!,
+                    style: AppTypography.caption(context),
+                  ),
                   const SizedBox(height: AppSpacing.xs),
                 ],
                 AnimatedBuilder(
@@ -83,8 +86,8 @@ class _TypingIndicatorState extends State<TypingIndicator>
                                 child: Container(
                                   width: 6,
                                   height: 6,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.accent,
+                                  decoration: BoxDecoration(
+                                    color: context.colors.accent,
                                     shape: BoxShape.circle,
                                   ),
                                 ),

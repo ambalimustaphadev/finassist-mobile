@@ -20,11 +20,11 @@ class CalculatorScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text(title, style: AppTypography.screenTitle),
+        title: Text(title, style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: ListView(
@@ -58,18 +58,18 @@ class CalculatorField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTypography.bodyMedium),
+          Text(label, style: AppTypography.bodyMedium(context)),
           const SizedBox(height: AppSpacing.xs),
           TextField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textCapitalization: TextCapitalization.none,
-            style: AppTypography.body,
+            style: AppTypography.body(context),
             decoration: InputDecoration(
               filled: true,
-              fillColor: AppColors.surface,
+              fillColor: context.colors.surface,
               suffixText: suffixText,
-              suffixStyle: AppTypography.body,
+              suffixStyle: AppTypography.body(context),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.md),
                 borderSide: BorderSide.none,
@@ -106,12 +106,12 @@ class CalculatorResultRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTypography.body),
+          Text(label, style: AppTypography.body(context)),
           Text(
             value,
             style: emphasize
-                ? AppTypography.financialNumberMedium
-                : AppTypography.bodyMedium,
+                ? AppTypography.financialNumberMedium(context)
+                : AppTypography.bodyMedium(context),
           ),
         ],
       ),

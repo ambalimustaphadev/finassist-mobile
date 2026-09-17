@@ -34,9 +34,9 @@ class AppBottomNavBar extends ConsumerWidget {
     final selectedIndex = ref.watch(mainTabProvider);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        border: Border(top: BorderSide(color: context.colors.border)),
       ),
       child: SafeArea(
         top: false,
@@ -80,7 +80,9 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? AppColors.accentDeep : AppColors.textMuted;
+    final color = isActive
+        ? context.colors.accent
+        : context.colors.textMuted;
     return InkWell(
       onTap: isActive ? null : onTap,
       borderRadius: BorderRadius.circular(AppRadius.md),
@@ -108,7 +110,7 @@ class _NavButton extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isActive
-                    ? AppColors.onboardingMintTint
+                    ? context.colors.accentSoft
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
@@ -121,7 +123,7 @@ class _NavButton extends StatelessWidget {
                     item.label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.navLabel.copyWith(
+                    style: AppTypography.navLabel(context).copyWith(
                       color: color,
                       fontWeight: FontWeight.w600,
                     ),

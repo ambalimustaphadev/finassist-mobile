@@ -237,14 +237,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   children: [
                     Text(
                       'Already have an account? ',
-                      style: AppTypography.body,
+                      style: AppTypography.body(context),
                     ),
                     GestureDetector(
                       onTap: _handleGoToLogin,
                       child: Text(
                         'Log in',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.accentDeep,
+                        style: AppTypography.bodyMedium(context).copyWith(
+                          color: context.colors.accentStrong,
                         ),
                       ),
                     ),
@@ -276,14 +276,14 @@ class _TermsCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final linkStyle = AppTypography.caption.copyWith(
-      color: AppColors.accentDeep,
+    final linkStyle = AppTypography.caption(context).copyWith(
+      color: context.colors.accentStrong,
       fontWeight: FontWeight.w600,
       decoration: TextDecoration.underline,
-      decorationColor: AppColors.accentDeep,
+      decorationColor: context.colors.accentStrong,
     );
-    final textStyle = AppTypography.caption.copyWith(
-      color: AppColors.authTextPrimary,
+    final textStyle = AppTypography.caption(context).copyWith(
+      color: context.colors.textPrimary,
       height: 1.4,
     );
 
@@ -338,7 +338,9 @@ class _TermsCheckbox extends StatelessWidget {
             padding: const EdgeInsets.only(top: AppSpacing.xs, left: 28),
             child: Text(
               'Please agree to the Terms of Service and Privacy Policy.',
-              style: AppTypography.caption.copyWith(color: AppColors.negative),
+              style: AppTypography.caption(
+                context,
+              ).copyWith(color: context.colors.negative),
             ),
           ),
       ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../splash_colors.dart';
 import '../splash_timeline.dart';
 
 /// The FinAssist wordmark and tagline, real Flutter [Text] (never baked
@@ -41,7 +41,7 @@ class SplashWordmark extends StatelessWidget {
                     text: 'Assist',
                     style: TextStyle(
                       fontFamily: AppTypography.fontFamily,
-                      color: AppColors.accent,
+                      color: kSplashAccent,
                       fontSize: 34,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.6,

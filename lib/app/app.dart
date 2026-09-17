@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'router.dart';
 import 'theme/app_theme.dart';
+import 'theme/theme_mode_controller.dart';
 
-class FinAssistApp extends StatelessWidget {
+class FinAssistApp extends ConsumerWidget {
   const FinAssistApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeControllerProvider);
+
     return MaterialApp(
       title: 'FinAssist',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeMode,
       initialRoute: AppRoutes.splash,
       onGenerateRoute: onGenerateRoute,
       // Without this, Navigator's default initial-route generation sees

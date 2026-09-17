@@ -41,10 +41,10 @@ class SocialAuthButtons extends StatelessWidget {
           child: _SocialButton(
             label: 'Apple',
             onTap: () => _showComingSoon(context, 'Apple'),
-            child: const Icon(
+            child: Icon(
               Icons.apple_rounded,
               size: 22,
-              color: AppColors.authTextPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
         ),
@@ -53,10 +53,10 @@ class SocialAuthButtons extends StatelessWidget {
           child: _SocialButton(
             label: 'Email',
             onTap: () => _showComingSoon(context, 'Email'),
-            child: const Icon(
+            child: Icon(
               Icons.mail_outline_rounded,
               size: 20,
-              color: AppColors.authTextPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
         ),
@@ -70,10 +70,10 @@ class SocialAuthButtons extends StatelessWidget {
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surfaceElevated,
+          backgroundColor: context.colors.surfaceElevated,
           content: Text(
             '$provider sign-in is coming soon',
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: context.colors.textPrimary),
           ),
         ),
       );
@@ -97,7 +97,7 @@ class _SocialButton extends StatelessWidget {
       button: true,
       label: 'Continue with $label',
       child: Material(
-        color: AppColors.authSurface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: InkWell(
           onTap: onTap,
@@ -106,7 +106,7 @@ class _SocialButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.authInputBorder),
+              border: Border.all(color: context.colors.border),
             ),
             alignment: Alignment.center,
             child: child,

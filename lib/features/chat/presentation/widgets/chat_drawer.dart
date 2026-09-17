@@ -66,7 +66,7 @@ class _ChatDrawerState extends ConsumerState<ChatDrawer> {
     final drawerWidth = (width * 0.8).clamp(280.0, 400.0);
 
     return Drawer(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       width: drawerWidth,
       child: SafeArea(
         child: Column(
@@ -90,7 +90,10 @@ class _ChatDrawerState extends ConsumerState<ChatDrawer> {
             if (hasAnyConversations)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Text('Recent', style: AppTypography.sectionHeading),
+                child: Text(
+                  'Recent',
+                  style: AppTypography.sectionHeading(context),
+                ),
               ),
             const SizedBox(height: AppSpacing.xs),
             Expanded(
@@ -130,7 +133,7 @@ class _ChatDrawerState extends ConsumerState<ChatDrawer> {
                       },
                     ),
             ),
-            Divider(height: 1, color: AppColors.borderSubtle),
+            Divider(height: 1, color: context.colors.borderSubtle),
             // _SettingsRow(onTap: () => _openProfile(context, ref)),
             _DrawerProfileFooter(onTap: () => _openProfile(context, ref)),
           ],
@@ -227,15 +230,15 @@ class _DrawerHeader extends StatelessWidget {
                     children: [
                       TextSpan(
                         text: 'Fin',
-                        style: AppTypography.greeting.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
+                        style: AppTypography.greeting(
+                          context,
+                        ).copyWith(color: context.colors.textPrimary),
                       ),
                       TextSpan(
                         text: 'Assist',
-                        style: AppTypography.greeting.copyWith(
-                          color: AppColors.accentStrong,
-                        ),
+                        style: AppTypography.greeting(
+                          context,
+                        ).copyWith(color: context.colors.accentStrong),
                       ),
                     ],
                   ),
@@ -253,7 +256,7 @@ class _DrawerHeader extends StatelessWidget {
               //       padding: EdgeInsets.all(AppSpacing.sm),
               //       child: Icon(
               //         Icons.close_rounded,
-              //         color: AppColors.textSecondary,
+              //         color: context.colors.textSecondary,
               //         size: 22,
               //       ),
               //     ),
@@ -263,7 +266,9 @@ class _DrawerHeader extends StatelessWidget {
           ),
           Text(
             'Your AI partner for a healthier financial life.',
-            style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+            style: AppTypography.caption(
+              context,
+            ).copyWith(color: context.colors.textMuted),
           ),
         ],
       ),
@@ -281,7 +286,7 @@ class _NewChatButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Material(
-        color: AppColors.onboardingMintTint,
+        color: context.colors.surfaceHighlight,
         borderRadius: BorderRadius.circular(AppRadius.pill),
         child: InkWell(
           onTap: onTap,
@@ -297,8 +302,8 @@ class _NewChatButton extends StatelessWidget {
                 Container(
                   width: 26,
                   height: 26,
-                  decoration: const BoxDecoration(
-                    color: AppColors.accentStrong,
+                  decoration: BoxDecoration(
+                    color: context.colors.accentStrong,
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
@@ -311,8 +316,8 @@ class _NewChatButton extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'New chat',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
+                  style: AppTypography.bodyMedium(context).copyWith(
+                    color: context.colors.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -337,23 +342,27 @@ class _ConversationSearchField extends StatelessWidget {
       label: 'Search conversations',
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppColors.borderSubtle),
+          border: Border.all(color: context.colors.borderSubtle),
         ),
         child: TextField(
           controller: controller,
           textInputAction: TextInputAction.search,
           textCapitalization: TextCapitalization.sentences,
-          style: AppTypography.body.copyWith(color: AppColors.textPrimary),
+          style: AppTypography.body(
+            context,
+          ).copyWith(color: context.colors.textPrimary),
           decoration: InputDecoration(
             isDense: true,
             border: InputBorder.none,
             hintText: 'Search conversations...',
-            hintStyle: AppTypography.body.copyWith(color: AppColors.textMuted),
-            prefixIcon: const Icon(
+            hintStyle: AppTypography.body(
+              context,
+            ).copyWith(color: context.colors.textMuted),
+            prefixIcon: Icon(
               Icons.search_rounded,
-              color: AppColors.textMuted,
+              color: context.colors.textMuted,
               size: 20,
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -380,8 +389,8 @@ class _GroupHeaderLabel extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: AppTypography.caption.copyWith(
-          color: AppColors.textMuted,
+        style: AppTypography.caption(context).copyWith(
+          color: context.colors.textMuted,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -419,7 +428,9 @@ class _ConversationTile extends StatelessWidget {
         label: conversation.title,
         selected: isActive,
         child: Material(
-          color: isActive ? AppColors.onboardingMintTint : Colors.transparent,
+          color: isActive
+              ? context.colors.surfaceHighlight
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.md),
           child: InkWell(
             onTap: onTap,
@@ -434,8 +445,8 @@ class _ConversationTile extends StatelessWidget {
                   Icon(
                     Icons.chat_bubble_outline_rounded,
                     color: isActive
-                        ? AppColors.accentDeep
-                        : AppColors.textMuted,
+                        ? context.colors.accentStrong
+                        : context.colors.textMuted,
                     size: 18,
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -444,31 +455,31 @@ class _ConversationTile extends StatelessWidget {
                       conversation.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
+                      style: AppTypography.bodyMedium(
+                        context,
+                      ).copyWith(color: context.colors.textPrimary),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     timeLabel,
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textMuted,
-                    ),
+                    style: AppTypography.caption(
+                      context,
+                    ).copyWith(color: context.colors.textMuted),
                   ),
                   Semantics(
                     button: true,
                     label: 'Conversation options',
                     child: PopupMenuButton<_ConversationAction>(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.more_vert_rounded,
-                        color: AppColors.textMuted,
+                        color: context.colors.textMuted,
                         size: 18,
                       ),
-                      color: AppColors.surface,
+                      color: context.colors.surface,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.md),
-                        side: const BorderSide(color: AppColors.border),
+                        side: BorderSide(color: context.colors.border),
                       ),
                       onSelected: (action) {
                         if (action == _ConversationAction.delete) onDelete();
@@ -478,9 +489,9 @@ class _ConversationTile extends StatelessWidget {
                           value: _ConversationAction.delete,
                           child: Text(
                             'Delete',
-                            style: AppTypography.body.copyWith(
-                              color: AppColors.negative,
-                            ),
+                            style: AppTypography.body(
+                              context,
+                            ).copyWith(color: context.colors.negative),
                           ),
                         ),
                       ],
@@ -509,7 +520,9 @@ class _EmptyConversations extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Text(
         message,
-        style: AppTypography.body.copyWith(color: AppColors.textMuted),
+        style: AppTypography.body(
+          context,
+        ).copyWith(color: context.colors.textMuted),
       ),
     );
   }
@@ -534,23 +547,23 @@ class _SettingsRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.settings_outlined,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 size: 19,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
                   'Settings',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                  style: AppTypography.bodyMedium(
+                    context,
+                  ).copyWith(color: context.colors.textSecondary),
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.textMuted,
+                color: context.colors.textMuted,
                 size: 20,
               ),
             ],
@@ -588,7 +601,7 @@ class _DrawerProfileFooter extends ConsumerWidget {
         button: true,
         label: 'Open profile',
         child: Material(
-          color: AppColors.onboardingMintTint,
+          color: context.colors.surfaceHighlight,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           child: InkWell(
             onTap: onTap,
@@ -617,8 +630,8 @@ class _DrawerProfileFooter extends ConsumerWidget {
                           name.isEmpty ? 'FinAssist user' : name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textPrimary,
+                          style: AppTypography.bodyMedium(context).copyWith(
+                            color: context.colors.textPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -627,16 +640,16 @@ class _DrawerProfileFooter extends ConsumerWidget {
                             subtitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTypography.caption.copyWith(
-                              color: AppColors.textMuted,
-                            ),
+                            style: AppTypography.caption(
+                              context,
+                            ).copyWith(color: context.colors.textMuted),
                           ),
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right_rounded,
-                    color: AppColors.textMuted,
+                    color: context.colors.textMuted,
                   ),
                 ],
               ),

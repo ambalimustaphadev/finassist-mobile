@@ -27,8 +27,8 @@ class SubscriptionPrimaryButton extends StatelessWidget {
       width: double.infinity,
       child: Material(
         color: enabled
-            ? AppColors.accentDeep
-            : AppColors.accentDeep.withValues(alpha: 0.5),
+            ? context.colors.accent
+            : context.colors.accent.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         child: InkWell(
           onTap: enabled ? onPressed : null,
@@ -37,18 +37,18 @@ class SubscriptionPrimaryButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             child: Center(
               child: isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        color: Colors.white,
+                        color: context.colors.textOnAccent,
                       ),
                     )
                   : Text(
                       label,
-                      style: AppTypography.buttonLabel.copyWith(
-                        color: Colors.white,
+                      style: AppTypography.buttonLabel(context).copyWith(
+                        color: context.colors.textOnAccent,
                       ),
                     ),
             ),

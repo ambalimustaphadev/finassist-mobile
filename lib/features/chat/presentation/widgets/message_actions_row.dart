@@ -85,9 +85,9 @@ class _ActionButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 13, color: AppColors.textMuted),
+              Icon(icon, size: 13, color: context.colors.textMuted),
               const SizedBox(width: 4),
-              Text(label, style: AppTypography.caption),
+              Text(label, style: AppTypography.caption(context)),
             ],
           ),
         ),

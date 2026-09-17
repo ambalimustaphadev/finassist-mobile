@@ -55,11 +55,11 @@ class PersonalizationHeader extends StatelessWidget {
                           key: Key('personalization-back-$step'),
                           onTap: onBack,
                           borderRadius: BorderRadius.circular(AppRadius.pill),
-                          child: const Padding(
-                            padding: EdgeInsets.all(AppSpacing.sm),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.sm),
                             child: Icon(
                               Icons.arrow_back_rounded,
-                              color: AppColors.onboardingHeading,
+                              color: context.colors.textPrimary,
                               size: 20,
                             ),
                           ),
@@ -79,9 +79,9 @@ class PersonalizationHeader extends StatelessWidget {
                     builder: (context, value, _) => LinearProgressIndicator(
                       value: value,
                       minHeight: 4,
-                      backgroundColor: AppColors.authInputBorder,
-                      valueColor: const AlwaysStoppedAnimation(
-                        AppColors.accent,
+                      backgroundColor: context.colors.border,
+                      valueColor: AlwaysStoppedAnimation(
+                        context.colors.accent,
                       ),
                     ),
                   ),
@@ -105,8 +105,8 @@ class PersonalizationHeader extends StatelessWidget {
                         ),
                         child: Text(
                           'Skip',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.onboardingBodyMuted,
+                          style: AppTypography.bodyMedium(context).copyWith(
+                            color: context.colors.textSecondary,
                           ),
                         ),
                       ),
@@ -116,8 +116,8 @@ class PersonalizationHeader extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             '$step of $personalizationStepCount',
-            style: AppTypography.caption.copyWith(
-              color: AppColors.onboardingBodyMuted,
+            style: AppTypography.caption(context).copyWith(
+              color: context.colors.textSecondary,
             ),
           ),
         ],

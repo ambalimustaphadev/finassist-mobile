@@ -91,18 +91,18 @@ class _SalaryBudgetPlannerScreenState
         SizedBox(
           width: double.infinity,
           child: Material(
-            color: AppColors.accent,
+            color: context.colors.accent,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: InkWell(
               onTap: _calculate,
               borderRadius: BorderRadius.circular(AppRadius.pill),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 child: Text(
                   'Calculate',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.black87,
+                    color: context.colors.textOnAccent,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -127,7 +127,7 @@ class _SalaryBudgetPlannerScreenState
                   label: 'Other deductions',
                   value: '- ${formatCurrency(result.otherDeductions, symbol)}',
                 ),
-                Divider(color: AppColors.borderSubtle),
+                Divider(color: context.colors.borderSubtle),
                 CalculatorResultRow(
                   label: 'Net (take-home) salary',
                   value: formatCurrency(result.net, symbol),

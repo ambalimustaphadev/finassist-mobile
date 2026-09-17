@@ -36,25 +36,27 @@ class SubscriptionEmptyState extends StatelessWidget {
             width: 112,
             height: 112,
             decoration: BoxDecoration(
-              color: AppColors.onboardingMintTint,
+              color: context.colors.accentSoft,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: const Icon(
+            child: Icon(
               Icons.inventory_2_outlined,
               size: 44,
-              color: AppColors.accentStrong,
+              color: context.colors.accentStrong,
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          Text(title, style: AppTypography.sectionHeading),
+          Text(title, style: AppTypography.sectionHeading(context)),
           const SizedBox(height: AppSpacing.sm),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
             child: Text(
               message,
               textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(color: AppColors.textMuted),
+              style: AppTypography.body(
+                context,
+              ).copyWith(color: context.colors.textMuted),
             ),
           ),
           if (onAction != null) ...[

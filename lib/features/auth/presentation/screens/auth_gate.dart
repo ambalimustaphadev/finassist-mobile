@@ -129,11 +129,11 @@ class _AuthGateLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.background,
+    return Scaffold(
+      backgroundColor: context.colors.background,
       body: Center(
         child: CircularProgressIndicator(
-          color: AppColors.accent,
+          color: context.colors.accent,
           strokeWidth: 2.5,
         ),
       ),
@@ -149,7 +149,7 @@ class _AuthGateUnavailable extends ConsumerWidget {
     final notifier = ref.read(authControllerProvider.notifier);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -157,33 +157,35 @@ class _AuthGateUnavailable extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.cloud_off_rounded,
-                  color: AppColors.textMuted,
+                  color: context.colors.textMuted,
                   size: 32,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   "FinAssist couldn't connect right now.",
                   textAlign: TextAlign.center,
-                  style: AppTypography.body,
+                  style: AppTypography.body(context),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 SizedBox(
                   width: double.infinity,
                   child: Material(
-                    color: AppColors.accent,
+                    color: context.colors.accent,
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                     child: InkWell(
                       onTap: notifier.retryRestoreSession,
                       borderRadius: BorderRadius.circular(AppRadius.pill),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.md,
+                        ),
                         child: Text(
                           'Try again',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Colors.black87,
+                            color: context.colors.textOnAccent,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -196,8 +198,8 @@ class _AuthGateUnavailable extends ConsumerWidget {
                   onPressed: notifier.continueToLogin,
                   child: Text(
                     'Log in instead',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AppTypography.bodyMedium(context).copyWith(
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ),

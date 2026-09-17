@@ -140,11 +140,14 @@ class _EditSubscriptionScreenState extends ConsumerState<EditSubscriptionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Edit subscription', style: AppTypography.screenTitle),
+        title: Text(
+          'Edit subscription',
+          style: AppTypography.screenTitle(context),
+        ),
       ),
       body: SafeArea(
         child: ListView(
@@ -219,7 +222,9 @@ class _EditSubscriptionScreenState extends ConsumerState<EditSubscriptionScreen>
               const SizedBox(height: AppSpacing.md),
               Text(
                 _saveError!,
-                style: AppTypography.body.copyWith(color: AppColors.negative),
+                style: AppTypography.body(
+                  context,
+                ).copyWith(color: context.colors.negative),
               ),
             ],
             const SizedBox(height: AppSpacing.xl),

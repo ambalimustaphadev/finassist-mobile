@@ -23,20 +23,20 @@ class NotificationsScreen extends ConsumerWidget {
     final notifier = ref.read(notificationsControllerProvider.notifier);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Notifications', style: AppTypography.screenTitle),
+        title: Text('Notifications', style: AppTypography.screenTitle(context)),
         actions: [
           if (state.hasUnread)
             TextButton(
               onPressed: state.isMarkingAll ? null : notifier.markAllRead,
               child: Text(
                 'Mark all read',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.accent,
-                ),
+                style: AppTypography.bodyMedium(
+                  context,
+                ).copyWith(color: context.colors.accent),
               ),
             ),
         ],
@@ -62,8 +62,8 @@ class NotificationsScreen extends ConsumerWidget {
             ),
           NotificationsLoadStatus.loaded => RefreshIndicator(
             onRefresh: notifier.refresh,
-            color: AppColors.accent,
-            backgroundColor: AppColors.surfaceElevated,
+            color: context.colors.accent,
+            backgroundColor: context.colors.surfaceElevated,
             child: ListView.separated(
               padding: const EdgeInsets.all(AppSpacing.lg),
               itemCount: state.notifications.length + (state.hasMore ? 1 : 0),
@@ -80,19 +80,19 @@ class NotificationsScreen extends ConsumerWidget {
                             ? null
                             : notifier.loadMore,
                         child: state.isLoadingMore
-                            ? const SizedBox(
+                            ? SizedBox(
                                 height: 16,
                                 width: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: AppColors.accent,
+                                  color: context.colors.accent,
                                 ),
                               )
                             : Text(
                                 'Load more',
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.accent,
-                                ),
+                                style: AppTypography.bodyMedium(
+                                  context,
+                                ).copyWith(color: context.colors.accent),
                               ),
                       ),
                     ),
@@ -121,7 +121,7 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: InkWell(
         onTap: onTap,
@@ -134,18 +134,24 @@ class _NotificationTile extends StatelessWidget {
               IconBadge(
                 icon: Icons.notifications_rounded,
                 color: notification.read
-                    ? AppColors.textMuted
-                    : AppColors.accentStrong,
+                    ? context.colors.textMuted
+                    : context.colors.accentStrong,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(notification.title, style: AppTypography.bodyMedium),
+                    Text(
+                      notification.title,
+                      style: AppTypography.bodyMedium(context),
+                    ),
                     if (notification.body != null) ...[
                       const SizedBox(height: 2),
-                      Text(notification.body!, style: AppTypography.caption),
+                      Text(
+                        notification.body!,
+                        style: AppTypography.caption(context),
+                      ),
                     ],
                   ],
                 ),
@@ -153,15 +159,15 @@ class _NotificationTile extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Text(
                 notification.createdAt.toRelativeConversationDate(),
-                style: AppTypography.caption,
+                style: AppTypography.caption(context),
               ),
               if (!notification.read) ...[
                 const SizedBox(width: AppSpacing.xs),
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.accent,
+                  decoration: BoxDecoration(
+                    color: context.colors.accent,
                     shape: BoxShape.circle,
                   ),
                 ),

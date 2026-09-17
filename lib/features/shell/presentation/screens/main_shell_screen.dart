@@ -27,7 +27,7 @@ class MainShellScreen extends ConsumerWidget {
 
     return Scaffold(
       key: const Key('mainShellScreen'),
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       bottomNavigationBar: const AppBottomNavBar(),
       floatingActionButton: activeTab == chatTabIndex
           ? null

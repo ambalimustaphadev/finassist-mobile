@@ -12,20 +12,20 @@ class SubscriptionStatusBadge extends StatelessWidget {
 
   final SubscriptionStatus status;
 
-  Color get _color {
+  Color _color(BuildContext context) {
     switch (status) {
       case SubscriptionStatus.active:
-        return AppColors.accentStrong;
+        return context.colors.accentStrong;
       case SubscriptionStatus.paused:
-        return const Color(0xFFB98900);
+        return context.colors.warning;
       case SubscriptionStatus.cancelled:
-        return AppColors.negative;
+        return context.colors.negative;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = _color;
+    final color = _color(context);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -37,7 +37,7 @@ class SubscriptionStatusBadge extends StatelessWidget {
       ),
       child: Text(
         status.label,
-        style: AppTypography.caption.copyWith(
+        style: AppTypography.caption(context).copyWith(
           color: color,
           fontWeight: FontWeight.w600,
         ),

@@ -15,7 +15,7 @@ class ScrollToLatestButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceElevated,
+      color: context.colors.surfaceElevated,
       borderRadius: BorderRadius.circular(AppRadius.pill),
       elevation: 4,
       shadowColor: Colors.black.withValues(alpha: 0.4),
@@ -29,21 +29,21 @@ class ScrollToLatestButton extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(color: AppColors.borderSubtle),
+            border: Border.all(color: context.colors.borderSubtle),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.arrow_downward_rounded,
                 size: 14,
-                color: AppColors.accent,
+                color: context.colors.accent,
               ),
               const SizedBox(width: 6),
               Text(
                 'New response',
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.textPrimary,
+                style: AppTypography.caption(context).copyWith(
+                  color: context.colors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

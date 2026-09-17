@@ -92,14 +92,14 @@ class _RobotWithSpeechBubble extends StatelessWidget {
                 vertical: AppSpacing.sm,
               ),
               decoration: BoxDecoration(
-                color: AppColors.authSurface,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: AppColors.authInputBorder),
+                border: Border.all(color: context.colors.border),
               ),
               child: Text(
                 'Different people. Different questions. A better FinAssist.',
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.authTextPrimary,
+                style: AppTypography.caption(context).copyWith(
+                  color: context.colors.textPrimary,
                   height: 1.3,
                 ),
               ),
@@ -131,11 +131,11 @@ class _BenefitRow extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: AppColors.onboardingMintTint,
+            color: context.colors.accentSoft,
             borderRadius: BorderRadius.circular(AppSpacing.sm),
           ),
           alignment: Alignment.center,
-          child: Icon(icon, color: AppColors.accentDeep, size: 18),
+          child: Icon(icon, color: context.colors.accentStrong, size: 18),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
@@ -144,16 +144,16 @@ class _BenefitRow extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.onboardingHeading,
+                style: AppTypography.bodyMedium(context).copyWith(
+                  color: context.colors.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               Text(
                 subtitle,
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.onboardingBodyMuted,
-                ),
+                style: AppTypography.caption(
+                  context,
+                ).copyWith(color: context.colors.textSecondary),
               ),
             ],
           ),

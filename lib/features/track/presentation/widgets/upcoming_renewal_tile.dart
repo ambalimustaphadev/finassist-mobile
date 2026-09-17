@@ -29,7 +29,7 @@ class UpcomingRenewalTile extends StatelessWidget {
     final symbol = currencyOptionFor(subscription.currency).symbol;
     final countdown = relativeCountdown(nextDate);
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: InkWell(
         onTap: onTap,
@@ -38,7 +38,7 @@ class UpcomingRenewalTile extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(color: AppColors.borderSubtle),
+            border: Border.all(color: context.colors.borderSubtle),
           ),
           child: Row(
             children: [
@@ -52,13 +52,16 @@ class UpcomingRenewalTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(subscription.name, style: AppTypography.bodyMedium),
+                    Text(
+                      subscription.name,
+                      style: AppTypography.bodyMedium(context),
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       '${formatCurrency(subscription.amount, symbol)} · '
                       '${subscription.frequency.label} · '
                       '${DateFormat('MMM d, yyyy').format(nextDate)}',
-                      style: AppTypography.caption,
+                      style: AppTypography.caption(context),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -72,13 +75,13 @@ class UpcomingRenewalTile extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceHighlight,
+                  color: context.colors.surfaceHighlight,
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(
                   countdown,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.textSecondary,
+                  style: AppTypography.caption(context).copyWith(
+                    color: context.colors.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

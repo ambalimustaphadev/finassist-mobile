@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
+import '../splash_colors.dart';
 import '../splash_timeline.dart';
 
 /// The subtle glowing orbit around the logo/card cluster: a tilted ellipse
@@ -71,7 +71,7 @@ class _OrbitPainter extends CustomPainter {
     final glowPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 5
-      ..color = AppColors.accentStrong.withValues(alpha: 0.16 * drawProgress)
+      ..color = kSplashAccentStrong.withValues(alpha: 0.16 * drawProgress)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawArc(
       rect,
@@ -85,7 +85,7 @@ class _OrbitPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.3
       ..strokeCap = StrokeCap.round
-      ..color = AppColors.accentSoft.withValues(alpha: 0.5 * drawProgress);
+      ..color = kSplashAccentSoft.withValues(alpha: 0.5 * drawProgress);
     canvas.drawArc(
       rect,
       _startAngle,
@@ -103,7 +103,7 @@ class _OrbitPainter extends CustomPainter {
       particleCenter,
       4,
       Paint()
-        ..color = AppColors.accentSoft.withValues(alpha: 0.9 * drawProgress)
+        ..color = kSplashAccentSoft.withValues(alpha: 0.9 * drawProgress)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
     );
     canvas.drawCircle(

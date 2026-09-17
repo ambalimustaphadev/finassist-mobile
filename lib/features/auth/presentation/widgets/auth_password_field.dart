@@ -49,11 +49,14 @@ class _AuthPasswordFieldState extends State<AuthPasswordField> {
         autovalidateMode: AutovalidateMode.onUserInteraction,
         autofillHints: widget.autofillHints,
         textCapitalization: TextCapitalization.none,
-        style: AppTypography.bodyMedium.copyWith(
-          color: AppColors.authTextPrimary,
+        style: AppTypography.bodyMedium(context).copyWith(
+          color: context.colors.textPrimary,
         ),
-        cursorColor: AppColors.accentDeep,
-        decoration: AuthInputCard.fieldDecoration(hintText: widget.hintText),
+        cursorColor: context.colors.accentStrong,
+        decoration: AuthInputCard.fieldDecoration(
+          context: context,
+          hintText: widget.hintText,
+        ),
       ),
       trailing: Semantics(
         button: true,
@@ -66,7 +69,7 @@ class _AuthPasswordFieldState extends State<AuthPasswordField> {
                 ? Icons.visibility_off_outlined
                 : Icons.visibility_outlined,
             size: 19,
-            color: AppColors.authTextMuted,
+            color: context.colors.textMuted,
           ),
         ),
       ),

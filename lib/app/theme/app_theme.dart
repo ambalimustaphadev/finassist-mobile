@@ -3,35 +3,69 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'app_typography.dart';
 
-/// Builds the single light [ThemeData] used across FinAssist's main app
-/// (Chat/Quick/Tools/Profile). The conversation-history drawer is the one
-/// deliberately dark surface left, styled directly with the `drawer*`
-/// tokens rather than through a second app-wide theme.
+/// Builds FinAssist's Light and Dark [ThemeData]. Both share the same
+/// typography, spacing, corner-radius system, icon system, navigation
+/// structure and interaction patterns (see `app_typography.dart` /
+/// `app_spacing.dart`) — only the [AppColorScheme] registered as a
+/// [ThemeExtension] differs, and every widget reads colors through it via
+/// `context.colors` rather than through `ColorScheme`/hardcoded values.
 abstract final class AppTheme {
-  static ThemeData get light {
-    final base = ThemeData.light(useMaterial3: true);
+  static ThemeData get light => _build(Brightness.light, AppColorScheme.light());
+
+  static ThemeData get dark => _build(Brightness.dark, AppColorScheme.dark());
+
+  static ThemeData _build(Brightness brightness, AppColorScheme colors) {
+    final base = ThemeData(brightness: brightness, useMaterial3: true);
     return base.copyWith(
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: colors.background,
       colorScheme: base.colorScheme.copyWith(
-        surface: AppColors.background,
-        primary: AppColors.accent,
-        secondary: AppColors.accentStrong,
+        brightness: brightness,
+        surface: colors.surface,
+        onSurface: colors.textPrimary,
+        primary: colors.accent,
+        onPrimary: colors.textOnAccent,
+        secondary: colors.accentStrong,
+        onSecondary: colors.textOnAccent,
+        error: colors.negative,
+        onError: colors.textOnAccent,
       ),
       textTheme: base.textTheme.apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
-        fontFamily: AppTypography.body.fontFamily,
+        bodyColor: colors.textPrimary,
+        displayColor: colors.textPrimary,
+        fontFamily: AppTypography.fontFamily,
       ),
       splashFactory: NoSplash.splashFactory,
       highlightColor: Colors.transparent,
-      dividerColor: AppColors.border,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textPrimary,
+      dividerColor: colors.border,
+      iconTheme: IconThemeData(color: colors.textPrimary),
+      appBarTheme: AppBarTheme(
+        backgroundColor: colors.background,
+        foregroundColor: colors.textPrimary,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: colors.surface,
+        hintStyle: TextStyle(color: colors.textMuted, fontFamily: AppTypography.fontFamily),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colors.accent, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colors.negative),
+        ),
+      ),
+      extensions: [colors],
       // Android's Material 3 default (a soft fade+zoom) already reads as
       // premium, so it's left as-is; only iOS/macOS get overridden — their
       // default is Cupertino's edge-to-edge slide, which is the "one page

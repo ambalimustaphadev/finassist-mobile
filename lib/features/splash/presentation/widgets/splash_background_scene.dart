@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
+import '../splash_colors.dart';
 import '../splash_timeline.dart';
 
 /// The persistent dark-emerald atmosphere behind every other splash layer:
@@ -13,10 +13,10 @@ class SplashBackgroundScene extends StatelessWidget {
 
   final double t;
 
-  /// Deeper than [AppColors.drawerBackground] at the edges for a more
-  /// cinematic near-black — the drawer tone is reused as the mid-tone the
-  /// glows blend into, keeping this in the same dark-emerald family as the
-  /// rest of the app rather than introducing an unrelated black.
+  /// Deeper than [kSplashDarkBg] at the edges for a more cinematic
+  /// near-black — the mid-tone the glows blend into, keeping this in the
+  /// same dark-emerald family as the rest of the app rather than
+  /// introducing an unrelated black.
   static const _edgeShade = Color(0xFF050A08);
 
   @override
@@ -39,11 +39,7 @@ class SplashBackgroundScene extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    _edgeShade,
-                    AppColors.drawerBackground,
-                    _edgeShade,
-                  ],
+                  colors: [_edgeShade, kSplashDarkBg, _edgeShade],
                 ),
               ),
             ),
@@ -54,8 +50,8 @@ class SplashBackgroundScene extends StatelessWidget {
                   center: const Alignment(0, -0.28),
                   radius: 0.75,
                   colors: [
-                    AppColors.accentStrong.withValues(alpha: 0.22),
-                    AppColors.accentStrong.withValues(alpha: 0.0),
+                    kSplashAccentStrong.withValues(alpha: 0.22),
+                    kSplashAccentStrong.withValues(alpha: 0.0),
                   ],
                 ),
               ),
@@ -67,8 +63,8 @@ class SplashBackgroundScene extends StatelessWidget {
                   center: const Alignment(0.15, 0.95),
                   radius: 0.9,
                   colors: [
-                    AppColors.accent.withValues(alpha: 0.16),
-                    AppColors.accent.withValues(alpha: 0.0),
+                    kSplashAccent.withValues(alpha: 0.16),
+                    kSplashAccent.withValues(alpha: 0.0),
                   ],
                 ),
               ),

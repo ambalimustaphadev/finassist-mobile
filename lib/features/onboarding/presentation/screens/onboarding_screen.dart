@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../core/local/onboarding_store.dart';
 import '../widgets/onboarding_carousel_page.dart';
 
@@ -50,7 +49,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.drawerBackground,
+      // Deliberately fixed-dark (not theme-reactive), like Splash — a
+      // pre-auth brand moment shown before any theme preference is even
+      // relevant.
+      backgroundColor: const Color(0xFF0E1A15),
       body: PageView.builder(
         controller: _controller,
         itemCount: _pageCount,

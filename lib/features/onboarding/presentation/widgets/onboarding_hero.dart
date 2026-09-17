@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
+// Fixed-dark, pre-auth brand composition — see onboarding_carousel_page.dart.
+const _kOnboardingDarkBg = Color(0xFF0E1A15);
 
 /// The tilted phone product shot for one onboarding page. The supplied
 /// artwork already bakes in its own background/glow/pagination-dot
 /// treatment — this widget shows it at its native 2:3 aspect ratio (never
-/// cropped or distorted) and fades its bottom edge into
-/// [AppColors.drawerBackground] so the artwork's own baked-in dots/CTA
-/// pixels dissolve into the page rather than visually duplicating the real,
+/// cropped or distorted) and fades its bottom edge into the carousel's
+/// fixed dark background so the artwork's own baked-in dots/CTA pixels
+/// dissolve into the page rather than visually duplicating the real,
 /// interactive footer built in Flutter just below it.
 class OnboardingHero extends StatelessWidget {
   const OnboardingHero({super.key, required this.asset});
@@ -38,8 +39,8 @@ class OnboardingHero extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        AppColors.drawerBackground.withValues(alpha: 0),
-                        AppColors.drawerBackground,
+                        _kOnboardingDarkBg.withValues(alpha: 0),
+                        _kOnboardingDarkBg,
                       ],
                     ),
                   ),

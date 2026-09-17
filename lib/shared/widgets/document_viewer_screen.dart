@@ -84,12 +84,12 @@ class DocumentViewerScreen extends StatelessWidget {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
+          SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.surfaceElevated,
+            backgroundColor: context.colors.surfaceElevated,
             content: Text(
               "Couldn't open this document.",
-              style: TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: context.colors.textPrimary),
             ),
           ),
         );
@@ -102,15 +102,15 @@ class DocumentViewerScreen extends StatelessWidget {
     final validUrl = url != null && url.isNotEmpty && Uri.tryParse(url) != null;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
         title: Text(
           filename,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTypography.screenTitle,
+          style: AppTypography.screenTitle(context),
         ),
         actions: [
           if (validUrl)
@@ -221,7 +221,7 @@ class _ImageViewer extends StatelessWidget {
   Widget build(BuildContext context) {
     return PhotoView(
       imageProvider: NetworkImage(fileUrl),
-      backgroundDecoration: const BoxDecoration(color: AppColors.background),
+      backgroundDecoration: BoxDecoration(color: context.colors.background),
       minScale: PhotoViewComputedScale.contained,
       maxScale: PhotoViewComputedScale.covered * 3,
       loadingBuilder: (context, event) => const _LoadingState(),
@@ -254,13 +254,13 @@ class _UnsupportedDocument extends StatelessWidget {
       action: SizedBox(
         width: double.infinity,
         child: Material(
-          color: AppColors.accent,
+          color: context.colors.accent,
           borderRadius: BorderRadius.circular(AppRadius.pill),
           child: InkWell(
             onTap: onOpenExternally,
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
                 vertical: AppSpacing.md,
                 horizontal: AppSpacing.xl,
               ),
@@ -268,7 +268,7 @@ class _UnsupportedDocument extends StatelessWidget {
                 'Open externally',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.black87,
+                  color: context.colors.textOnAccent,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -285,12 +285,12 @@ class _LoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: SizedBox(
         width: 28,
         height: 28,
         child: CircularProgressIndicator(
-          color: AppColors.accent,
+          color: context.colors.accent,
           strokeWidth: 2.4,
         ),
       ),
@@ -321,20 +321,20 @@ class _DocumentMessage extends StatelessWidget {
           children: [
             IconBadge(
               icon: icon,
-              color: AppColors.textMuted,
+              color: context.colors.textMuted,
               size: 56,
               iconSize: 26,
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               title,
-              style: AppTypography.sectionHeading,
+              style: AppTypography.sectionHeading(context),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               message,
-              style: AppTypography.body,
+              style: AppTypography.body(context),
               textAlign: TextAlign.center,
             ),
             if (action != null) ...[

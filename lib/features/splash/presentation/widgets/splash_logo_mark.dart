@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/finassist_logo.dart';
+import '../splash_colors.dart';
 import '../splash_timeline.dart';
 
 /// The FinAssist mark: the project's real `splash_logo.png` asset
@@ -48,7 +48,7 @@ class SplashLogoMark extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.accentStrong.withValues(
+                      color: kSplashAccentStrong.withValues(
                         alpha: 0.45 * reveal,
                       ),
                       blurRadius: size * 0.5,

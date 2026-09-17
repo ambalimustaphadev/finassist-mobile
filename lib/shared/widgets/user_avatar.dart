@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
@@ -53,22 +54,25 @@ class UserAvatar extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.accent, width: 1.5),
-        gradient: const LinearGradient(
-          colors: [AppColors.surfaceHighlight, AppColors.surfaceElevated],
+        border: Border.all(color: context.colors.accent, width: 1.5),
+        gradient: LinearGradient(
+          colors: [
+            context.colors.surfaceHighlight,
+            context.colors.surfaceElevated,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       alignment: Alignment.center,
-      child: _resolveImage(resolvedIconSize),
+      child: _resolveImage(context, resolvedIconSize),
     );
   }
 
-  Widget _resolveImage(double resolvedIconSize) {
+  Widget _resolveImage(BuildContext context, double resolvedIconSize) {
     final fallback = Icon(
       Icons.person_rounded,
-      color: AppColors.textSecondary,
+      color: context.colors.textSecondary,
       size: resolvedIconSize,
     );
 
@@ -93,6 +97,9 @@ class UserAvatar extends StatelessWidget {
         height: size,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
+          if (kDebugMode) {
+            debugPrint('[UserAvatar] Image.network failed for $imageUrl: $error');
+          }
           onImageError?.call();
           return fallback;
         },

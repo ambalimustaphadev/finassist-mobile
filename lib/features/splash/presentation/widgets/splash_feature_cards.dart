@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../splash_colors.dart';
 import '../splash_timeline.dart';
 
 class _CardSpec {
@@ -40,7 +40,7 @@ class SplashFeatureCards extends StatelessWidget {
     _CardSpec(
       label: 'Track',
       icon: Icons.bar_chart_rounded,
-      iconColor: AppColors.accentSoft,
+      iconColor: kSplashAccentSoft,
       alignment: const Alignment(-0.78, -0.86),
       interval: SplashTimeline.trackCard,
       floatPhase: 0.0,
@@ -64,7 +64,7 @@ class SplashFeatureCards extends StatelessWidget {
     _CardSpec(
       label: 'Achieve',
       icon: Icons.track_changes_rounded,
-      iconColor: AppColors.accentStrong,
+      iconColor: kSplashAccentStrong,
       alignment: const Alignment(0.94, 0.5),
       interval: SplashTimeline.achieveCard,
       floatPhase: 0.2,
@@ -127,7 +127,7 @@ class _FloatingCard extends StatelessWidget {
             height: size,
             padding: EdgeInsets.symmetric(vertical: size * 0.1),
             decoration: BoxDecoration(
-              color: AppColors.drawerBackground.withValues(alpha: 0.72),
+              color: kSplashDarkBg.withValues(alpha: 0.72),
               borderRadius: BorderRadius.circular(size * 0.22),
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.1),

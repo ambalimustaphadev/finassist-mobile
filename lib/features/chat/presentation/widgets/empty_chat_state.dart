@@ -43,7 +43,7 @@ class _EmptyChatStateState extends ConsumerState<EmptyChatState> {
       children: [
         Text.rich(
           TextSpan(
-            style: AppTypography.greeting,
+            style: AppTypography.greeting(context),
             children: [
               TextSpan(text: '$greetingWord,\n'),
               TextSpan(text: '$name.'.trim()),
@@ -51,12 +51,15 @@ class _EmptyChatStateState extends ConsumerState<EmptyChatState> {
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        Text('What would you like to know today?', style: AppTypography.body),
+        Text(
+          'What would you like to know today?',
+          style: AppTypography.body(context),
+        ),
         const SizedBox(height: AppSpacing.xxl),
         for (final suggestion in _suggestions) ...[
           ListActionCard(
             icon: suggestion.icon,
-            iconColor: suggestion.iconColor,
+            iconColor: suggestion.iconColor(context),
             title: suggestion.title,
             subtitle: suggestion.subtitle,
             onTap: () => widget.onSuggestionSelected(suggestion.title),

@@ -27,7 +27,7 @@ class SubscriptionIcon extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        color: AppColors.surfaceHighlight,
+        color: context.colors.surfaceHighlight,
         padding: EdgeInsets.all(size * 0.16),
         child: Image.asset(asset, fit: BoxFit.contain),
       ),

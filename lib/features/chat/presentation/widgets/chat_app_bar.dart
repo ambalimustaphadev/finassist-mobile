@@ -44,7 +44,9 @@ class _StatusSubtitle extends StatelessWidget {
 
     final isOffline =
         chatState.conversationStatus == ConversationLoadStatus.error;
-    final color = isOffline ? AppColors.negative : AppColors.accentStrong;
+    final color = isOffline
+        ? context.colors.negative
+        : context.colors.accentStrong;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -57,7 +59,7 @@ class _StatusSubtitle extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           isOffline ? 'Offline' : 'Online',
-          style: AppTypography.caption.copyWith(color: color),
+          style: AppTypography.caption(context).copyWith(color: color),
         ),
       ],
     );

@@ -30,8 +30,8 @@ class AuthPrimaryButton extends StatelessWidget {
       width: double.infinity,
       child: Material(
         color: enabled
-            ? AppColors.accentDeep
-            : AppColors.accentDeep.withValues(alpha: 0.5),
+            ? context.colors.accent
+            : context.colors.accent.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         child: InkWell(
           onTap: enabled ? onPressed : null,
@@ -40,12 +40,12 @@ class AuthPrimaryButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             child: Center(
               child: isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        color: Colors.white,
+                        color: context.colors.textOnAccent,
                       ),
                     )
                   : Row(
@@ -53,16 +53,16 @@ class AuthPrimaryButton extends StatelessWidget {
                       children: [
                         Text(
                           label,
-                          style: AppTypography.buttonLabel.copyWith(
-                            color: Colors.white,
+                          style: AppTypography.buttonLabel(context).copyWith(
+                            color: context.colors.textOnAccent,
                           ),
                         ),
                         if (showArrow) ...[
                           const SizedBox(width: AppSpacing.sm),
-                          const Icon(
+                          Icon(
                             Icons.arrow_forward_rounded,
                             size: 18,
-                            color: Colors.white,
+                            color: context.colors.textOnAccent,
                           ),
                         ],
                       ],

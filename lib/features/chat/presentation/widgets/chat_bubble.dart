@@ -99,11 +99,11 @@ class ChatBubble extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: _isUser
-                              ? AppColors.surfaceHighlight
-                              : AppColors.surface,
+                              ? context.colors.surfaceHighlight
+                              : context.colors.surface,
                           border: _isUser
                               ? null
-                              : Border.all(color: AppColors.borderSubtle),
+                              : Border.all(color: context.colors.borderSubtle),
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(AppRadius.lg),
                             topRight: const Radius.circular(AppRadius.lg),
@@ -138,62 +138,68 @@ class ChatBubble extends ConsumerWidget {
                         child: _isUser
                             ? Text(
                                 message.text,
-                                style: AppTypography.chatMessage.copyWith(
-                                  color: AppColors.textPrimary,
-                                ),
+                                style: AppTypography.chatMessage(
+                                  context,
+                                ).copyWith(color: context.colors.textPrimary),
                               )
                             : MarkdownBody(
                                 data: message.text,
                                 shrinkWrap: true,
                                 selectable: false,
                                 styleSheet: MarkdownStyleSheet(
-                                  p: AppTypography.chatMessage.copyWith(
-                                    color: AppColors.textPrimary,
-                                    height: 1.45,
-                                  ),
-
-                                  strong: AppTypography.chatMessage.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.45,
-                                  ),
-
-                                  em: AppTypography.chatMessage.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontStyle: FontStyle.italic,
-                                    height: 1.45,
-                                  ),
-
-                                  h1: AppTypography.chatMessage.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.3,
-                                  ),
-
-                                  h2: AppTypography.chatMessage.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.3,
-                                  ),
-
-                                  h3: AppTypography.chatMessage.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.35,
-                                  ),
-
-                                  listBullet: AppTypography.chatMessage
+                                  p: AppTypography.chatMessage(context)
                                       .copyWith(
-                                        color: AppColors.textPrimary,
+                                        color: context.colors.textPrimary,
                                         height: 1.45,
                                       ),
 
-                                  blockquote: AppTypography.chatMessage
+                                  strong: AppTypography.chatMessage(context)
                                       .copyWith(
-                                        color: AppColors.textSecondary,
+                                        color: context.colors.textPrimary,
+                                        fontWeight: FontWeight.w700,
+                                        height: 1.45,
+                                      ),
+
+                                  em: AppTypography.chatMessage(context)
+                                      .copyWith(
+                                        color: context.colors.textPrimary,
+                                        fontStyle: FontStyle.italic,
+                                        height: 1.45,
+                                      ),
+
+                                  h1: AppTypography.chatMessage(context)
+                                      .copyWith(
+                                        color: context.colors.textPrimary,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                        height: 1.3,
+                                      ),
+
+                                  h2: AppTypography.chatMessage(context)
+                                      .copyWith(
+                                        color: context.colors.textPrimary,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                        height: 1.3,
+                                      ),
+
+                                  h3: AppTypography.chatMessage(context)
+                                      .copyWith(
+                                        color: context.colors.textPrimary,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        height: 1.35,
+                                      ),
+
+                                  listBullet: AppTypography.chatMessage(context)
+                                      .copyWith(
+                                        color: context.colors.textPrimary,
+                                        height: 1.45,
+                                      ),
+
+                                  blockquote: AppTypography.chatMessage(context)
+                                      .copyWith(
+                                        color: context.colors.textSecondary,
                                         height: 1.45,
                                       ),
 
@@ -213,14 +219,15 @@ class ChatBubble extends ConsumerWidget {
                                   // a code editor: inline code (and even a
                                   // whole sentence wrapped in backticks)
                                   // should read as plain assistant text.
-                                  code: AppTypography.chatMessage.copyWith(
-                                    color: AppColors.textPrimary,
-                                    height: 1.45,
-                                    backgroundColor: Colors.transparent,
-                                  ),
+                                  code: AppTypography.chatMessage(context)
+                                      .copyWith(
+                                        color: context.colors.textPrimary,
+                                        height: 1.45,
+                                        backgroundColor: Colors.transparent,
+                                      ),
 
                                   codeblockDecoration: BoxDecoration(
-                                    color: AppColors.surface,
+                                    color: context.colors.surface,
                                     borderRadius: BorderRadius.circular(
                                       AppRadius.sm,
                                     ),
@@ -228,7 +235,9 @@ class ChatBubble extends ConsumerWidget {
 
                                   horizontalRuleDecoration: BoxDecoration(
                                     border: Border(
-                                      top: BorderSide(color: AppColors.border),
+                                      top: BorderSide(
+                                        color: context.colors.border,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -243,15 +252,15 @@ class ChatBubble extends ConsumerWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.verified_outlined,
                             size: 12,
-                            color: AppColors.textMuted,
+                            color: context.colors.textMuted,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             'Based on your financial data',
-                            style: AppTypography.caption,
+                            style: AppTypography.caption(context),
                           ),
                         ],
                       ),
@@ -308,16 +317,16 @@ class ChatBubble extends ConsumerWidget {
                   children: [
                     Text(
                       message.timestamp.toTimeOfDay(),
-                      style: AppTypography.caption,
+                      style: AppTypography.caption(context),
                     ),
 
                     if (_isUser) ...[
                       const SizedBox(width: 4),
 
-                      const Icon(
+                      Icon(
                         Icons.done_all_rounded,
                         size: 14,
-                        color: AppColors.accent,
+                        color: context.colors.accent,
                       ),
                     ],
                   ],
@@ -389,15 +398,17 @@ class _FailedToSendRow extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline_rounded,
             size: 13,
-            color: AppColors.negative,
+            color: context.colors.negative,
           ),
           const SizedBox(width: 4),
           Text(
             'Failed to send · Retry',
-            style: AppTypography.caption.copyWith(color: AppColors.negative),
+            style: AppTypography.caption(
+              context,
+            ).copyWith(color: context.colors.negative),
           ),
         ],
       ),

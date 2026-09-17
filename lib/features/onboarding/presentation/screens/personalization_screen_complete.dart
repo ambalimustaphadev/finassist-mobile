@@ -43,7 +43,7 @@ class PersonalizationCompleteScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
-      backgroundColor: AppColors.onboardingBackground,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -64,9 +64,9 @@ class PersonalizationCompleteScreen extends ConsumerWidget {
                     Text(
                       "You're all set!",
                       textAlign: TextAlign.center,
-                      style: AppTypography.greeting.copyWith(
+                      style: AppTypography.greeting(context).copyWith(
                         fontSize: 26,
-                        color: AppColors.onboardingHeading,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -74,8 +74,8 @@ class PersonalizationCompleteScreen extends ConsumerWidget {
                       'FinAssist is now personalized\nto give you more '
                       'relevant,\nhelpful and practical answers.',
                       textAlign: TextAlign.center,
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.onboardingBodyMuted,
+                      style: AppTypography.body(context).copyWith(
+                        color: context.colors.textSecondary,
                         fontSize: 14.5,
                       ),
                     ),
@@ -85,9 +85,9 @@ class PersonalizationCompleteScreen extends ConsumerWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(AppSpacing.lg),
                         decoration: BoxDecoration(
-                          color: AppColors.authSurface,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(AppRadius.lg),
-                          border: Border.all(color: AppColors.authInputBorder),
+                          border: Border.all(color: context.colors.border),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,10 +97,11 @@ class PersonalizationCompleteScreen extends ConsumerWidget {
                                 Expanded(
                                   child: Text(
                                     'Your preferences',
-                                    style: AppTypography.bodyMedium.copyWith(
-                                      color: AppColors.authTextPrimary,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    style: AppTypography.bodyMedium(context)
+                                        .copyWith(
+                                          color: context.colors.textPrimary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                   ),
                                 ),
                                 TextButton(
@@ -112,10 +113,11 @@ class PersonalizationCompleteScreen extends ConsumerWidget {
                                   ),
                                   child: Text(
                                     'Edit',
-                                    style: AppTypography.bodyMedium.copyWith(
-                                      color: AppColors.accentDeep,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    style: AppTypography.bodyMedium(context)
+                                        .copyWith(
+                                          color: context.colors.accentStrong,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -164,14 +166,14 @@ class _SummaryRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: AppColors.accentDeep),
+        Icon(icon, size: 18, color: context.colors.accentStrong),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
             label,
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.authTextPrimary,
-            ),
+            style: AppTypography.bodyMedium(
+              context,
+            ).copyWith(color: context.colors.textPrimary),
           ),
         ),
       ],

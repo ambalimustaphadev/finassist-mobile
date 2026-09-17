@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../splash_colors.dart';
 import '../splash_timeline.dart';
 
 /// A visual animation-progress indicator, not a network loading spinner —
@@ -35,7 +35,7 @@ class SplashProgressBar extends StatelessWidget {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: AppColors.ctaGradient,
+                          colors: kSplashCtaGradient,
                         ),
                       ),
                     ),

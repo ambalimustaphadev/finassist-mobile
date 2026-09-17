@@ -143,7 +143,7 @@ class _CurrencyConverterScreenState
         SizedBox(
           width: double.infinity,
           child: Material(
-            color: AppColors.accent,
+            color: context.colors.accent,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: InkWell(
               onTap: _status == _ConversionStatus.loading ? null : _convert,
@@ -151,19 +151,19 @@ class _CurrencyConverterScreenState
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 child: _status == _ConversionStatus.loading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 18,
                         width: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black87,
+                          color: context.colors.textOnAccent,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'Convert',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.black87,
+                          color: context.colors.textOnAccent,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -175,7 +175,9 @@ class _CurrencyConverterScreenState
           const SizedBox(height: AppSpacing.lg),
           Text(
             _errorMessage ?? "Couldn't convert. Please try again.",
-            style: AppTypography.body.copyWith(color: AppColors.negative),
+            style: AppTypography.body(
+              context,
+            ).copyWith(color: context.colors.negative),
           ),
           const SizedBox(height: AppSpacing.md),
           CalculatorField(

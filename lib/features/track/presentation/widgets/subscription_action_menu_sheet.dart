@@ -36,7 +36,7 @@ class _ActionMenuSheet extends StatelessWidget {
         margin: const EdgeInsets.all(AppSpacing.md),
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
+          color: context.colors.surfaceElevated,
           borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
         child: Column(
@@ -46,7 +46,10 @@ class _ActionMenuSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text(subscription.name, style: AppTypography.sectionHeading),
+                child: Text(
+                  subscription.name,
+                  style: AppTypography.sectionHeading(context),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -73,7 +76,7 @@ class _ActionMenuSheet extends StatelessWidget {
             _ActionRow(
               icon: Icons.delete_outline_rounded,
               label: 'Delete subscription',
-              color: AppColors.negative,
+              color: context.colors.negative,
               onTap: () =>
                   Navigator.of(context).pop(SubscriptionAction.delete),
             ),
@@ -86,8 +89,8 @@ class _ActionMenuSheet extends StatelessWidget {
                   onPressed: () => Navigator.of(context).pop(),
                   child: Text(
                     'Close',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AppTypography.bodyMedium(context).copyWith(
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ),
@@ -115,7 +118,7 @@ class _ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedColor = color ?? AppColors.textPrimary;
+    final resolvedColor = color ?? context.colors.textPrimary;
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -129,7 +132,9 @@ class _ActionRow extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Text(
               label,
-              style: AppTypography.bodyMedium.copyWith(color: resolvedColor),
+              style: AppTypography.bodyMedium(
+                context,
+              ).copyWith(color: resolvedColor),
             ),
           ],
         ),

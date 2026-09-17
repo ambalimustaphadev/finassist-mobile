@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:finassist/app/router.dart';
+import 'package:finassist/app/theme/app_theme.dart';
 import 'package:finassist/features/auth/data/repositories/mock_auth_repository.dart';
 import 'package:finassist/features/auth/presentation/providers/auth_controller.dart';
 import 'package:finassist/features/splash/presentation/splash_timeline.dart';
@@ -53,6 +54,7 @@ Future<void> _pumpSplash(WidgetTester tester) async {
         authRepositoryProvider.overrideWithValue(MockAuthRepository()),
       ],
       child: MaterialApp(
+        theme: AppTheme.light,
         initialRoute: AppRoutes.splash,
         onGenerateRoute: onGenerateRoute,
         onGenerateInitialRoutes: (initialRouteName) {

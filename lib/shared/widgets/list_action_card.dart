@@ -36,11 +36,11 @@ class ListActionCard extends StatelessWidget {
     return AppCard(
       padding: EdgeInsets.all(dense ? AppSpacing.md : AppSpacing.lg),
       onTap: onTap,
-      child: dense ? _denseLayout() : _rowLayout(),
+      child: dense ? _denseLayout(context) : _rowLayout(context),
     );
   }
 
-  Widget _rowLayout() {
+  Widget _rowLayout(BuildContext context) {
     return Row(
       children: [
         IconBadge(icon: icon, color: iconColor),
@@ -49,21 +49,21 @@ class ListActionCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: AppTypography.bodyMedium),
+              Text(title, style: AppTypography.bodyMedium(context)),
               if (subtitle != null) ...[
                 const SizedBox(height: 2),
-                Text(subtitle!, style: AppTypography.caption),
+                Text(subtitle!, style: AppTypography.caption(context)),
               ],
             ],
           ),
         ),
         if (onTap != null)
-          const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+          Icon(Icons.chevron_right_rounded, color: context.colors.textMuted),
       ],
     );
   }
 
-  Widget _denseLayout() {
+  Widget _denseLayout(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -72,20 +72,20 @@ class ListActionCard extends StatelessWidget {
           children: [
             IconBadge(icon: icon, color: iconColor, size: 36, iconSize: 18),
             if (onTap != null)
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.textMuted,
+                color: context.colors.textMuted,
                 size: 18,
               ),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Text(title, style: AppTypography.bodyMedium),
+        Text(title, style: AppTypography.bodyMedium(context)),
         if (subtitle != null) ...[
           const SizedBox(height: 2),
           Text(
             subtitle!,
-            style: AppTypography.caption,
+            style: AppTypography.caption(context),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

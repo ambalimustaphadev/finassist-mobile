@@ -256,19 +256,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surfaceElevated,
+          backgroundColor: context.colors.surfaceElevated,
           content: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.error_outline_rounded,
-                color: AppColors.negative,
+                color: context.colors.negative,
                 size: 18,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   error,
-                  style: const TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(color: context.colors.textPrimary),
                 ),
               ),
             ],
@@ -287,7 +287,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     // No Scaffold `appBar:` here on purpose — see ChatAppBar's doc comment.
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       drawer: const ChatDrawer(),
       body: SafeArea(
         child: Column(
@@ -437,16 +437,16 @@ class _ConversationLoadingState extends StatelessWidget {
         children: [
           const AIAvatar(size: 40),
           const SizedBox(height: AppSpacing.lg),
-          const SizedBox(
+          SizedBox(
             width: 22,
             height: 22,
             child: CircularProgressIndicator(
-              color: AppColors.accent,
+              color: context.colors.accent,
               strokeWidth: 2.2,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          Text('Loading conversation...', style: AppTypography.body),
+          Text('Loading conversation...', style: AppTypography.body(context)),
         ],
       ),
     );

@@ -33,14 +33,16 @@ class AuthScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canPop = ModalRoute.canPopOf(context) ?? false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Dark status-bar/nav-bar icons for this screen's light background —
-    // the system bars themselves are transparent (see `main.dart`), so
-    // only their icon color needs to be set here.
+    // Status-bar/nav-bar icons that contrast with this screen's background,
+    // whichever theme is active — the system bars themselves are
+    // transparent (see `main.dart`), so only their icon color needs to be
+    // set here.
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: AppColors.onboardingBackground,
+        backgroundColor: context.colors.background,
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,11 +61,11 @@ class AuthScaffold extends StatelessWidget {
                     child: InkWell(
                       onTap: () => Navigator.of(context).pop(),
                       borderRadius: BorderRadius.circular(AppRadius.pill),
-                      child: const Padding(
-                        padding: EdgeInsets.all(AppSpacing.sm),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
                         child: Icon(
                           Icons.arrow_back_rounded,
-                          color: AppColors.onboardingHeading,
+                          color: context.colors.textPrimary,
                           size: 22,
                         ),
                       ),

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../shared/widgets/finassist_logo.dart';
+
+// Fixed-dark, pre-auth brand composition — see onboarding_carousel_page.dart.
+const _kOnboardingLightText = Color(0xFFF5F7F5);
+const _kOnboardingMutedText = Color(0xFF8FA398);
+const _kOnboardingAccent = Color(0xFF35D39A);
 
 /// Top row shared by all onboarding carousel pages: the FinAssist wordmark
 /// (reusing the same logo asset + "Fin"/"Assist" split-color pattern as the
@@ -22,16 +26,12 @@ class OnboardingHeader extends StatelessWidget {
         const SizedBox(width: 8),
         Text.rich(
           TextSpan(
-            style: AppTypography.sectionHeading.copyWith(fontSize: 18),
-            children: [
-              TextSpan(
-                text: 'Fin',
-                style: TextStyle(color: AppColors.drawerText),
-              ),
-              TextSpan(
-                text: 'Assist',
-                style: TextStyle(color: AppColors.accent),
-              ),
+            style: AppTypography.sectionHeading(
+              context,
+            ).copyWith(fontSize: 18),
+            children: const [
+              TextSpan(text: 'Fin', style: TextStyle(color: _kOnboardingLightText)),
+              TextSpan(text: 'Assist', style: TextStyle(color: _kOnboardingAccent)),
             ],
           ),
         ),
@@ -40,8 +40,8 @@ class OnboardingHeader extends StatelessWidget {
           onPressed: onSkip,
           child: Text(
             'Skip',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.drawerTextMuted,
+            style: AppTypography.bodyMedium(context).copyWith(
+              color: _kOnboardingMutedText,
             ),
           ),
         ),

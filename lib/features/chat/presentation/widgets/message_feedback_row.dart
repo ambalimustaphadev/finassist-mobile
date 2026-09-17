@@ -29,7 +29,7 @@ class MessageFeedbackRow extends ConsumerWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Was this helpful?', style: AppTypography.caption),
+          Text('Was this helpful?', style: AppTypography.caption(context)),
           const SizedBox(width: AppSpacing.sm),
           _FeedbackIconButton(
             icon: Icons.thumb_up_outlined,
@@ -48,19 +48,22 @@ class MessageFeedbackRow extends ConsumerWidget {
     }
 
     if (message.helpful == true) {
-      return Text('Thanks for the feedback', style: AppTypography.caption);
+      return Text(
+        'Thanks for the feedback',
+        style: AppTypography.caption(context),
+      );
     }
 
     // helpful == false: offer reasons unless one is already picked.
     if (message.notHelpfulReason != null) {
-      return Text('Thanks — noted.', style: AppTypography.caption);
+      return Text('Thanks — noted.', style: AppTypography.caption(context));
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('What was missing?', style: AppTypography.caption),
+        Text('What was missing?', style: AppTypography.caption(context)),
         const SizedBox(height: AppSpacing.xs),
         Wrap(
           spacing: AppSpacing.sm,
@@ -84,9 +87,9 @@ class MessageFeedbackRow extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppRadius.pill),
-                      border: Border.all(color: AppColors.borderSubtle),
+                      border: Border.all(color: context.colors.borderSubtle),
                     ),
-                    child: Text(reason, style: AppTypography.caption),
+                    child: Text(reason, style: AppTypography.caption(context)),
                   ),
                 ),
               ),
@@ -118,7 +121,7 @@ class _FeedbackIconButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.sm),
         child: Padding(
           padding: const EdgeInsets.all(4),
-          child: Icon(icon, size: 15, color: AppColors.textMuted),
+          child: Icon(icon, size: 15, color: context.colors.textMuted),
         ),
       ),
     );

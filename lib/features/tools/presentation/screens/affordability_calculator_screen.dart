@@ -81,18 +81,18 @@ class _AffordabilityCalculatorScreenState
         SizedBox(
           width: double.infinity,
           child: Material(
-            color: AppColors.accent,
+            color: context.colors.accent,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: InkWell(
               onTap: _calculate,
               borderRadius: BorderRadius.circular(AppRadius.pill),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 child: Text(
                   'Calculate',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.black87,
+                    color: context.colors.textOnAccent,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -113,7 +113,10 @@ class _AffordabilityCalculatorScreenState
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Based on a standard 36% debt-to-income guideline.',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  style: TextStyle(
+                    color: context.colors.textMuted,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),

@@ -36,7 +36,9 @@ class ChatComposer extends ConsumerStatefulWidget {
 
 class _ChatComposerState extends ConsumerState<ChatComposer> {
   final _controller = TextEditingController();
+  final _focusNode = FocusNode();
   bool _hasText = false;
+  bool _focused = false;
   PickedFile? _attachment;
   bool _isPicking = false;
 
@@ -47,11 +49,17 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
       final hasText = _controller.text.trim().isNotEmpty;
       if (hasText != _hasText) setState(() => _hasText = hasText);
     });
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus != _focused) {
+        setState(() => _focused = _focusNode.hasFocus);
+      }
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -70,12 +78,12 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
+          SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.surfaceElevated,
+            backgroundColor: context.colors.surfaceElevated,
             content: Text(
               "Couldn't open the file picker. Please try again.",
-              style: TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: context.colors.textPrimary),
             ),
           ),
         );
@@ -106,15 +114,20 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 6,
+        horizontal: AppSpacing.sm,
+        vertical: 8,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(
           _attachment != null ? AppRadius.xl : AppRadius.pill,
         ),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(
+          color: _focused
+              ? context.colors.accent.withValues(alpha: 0.55)
+              : context.colors.borderSubtle,
+          width: _focused ? 1.5 : 1,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -151,33 +164,36 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
                     onTap: isBusy ? null : _handleAttach,
                     customBorder: const CircleBorder(),
                     child: Padding(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(8),
                       child: _isPicking
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                               ),
                             )
-                          : const Icon(
+                          : Icon(
                               Icons.attach_file_rounded,
-                              color: AppColors.textSecondary,
-                              size: 20,
+                              color: context.colors.textSecondary,
+                              size: 22,
                             ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: TextField(
                   controller: _controller,
+                  focusNode: _focusNode,
                   enabled: !isBusy,
-                  style: AppTypography.chatMessage.copyWith(
-                    color: AppColors.textPrimary,
+                  style: AppTypography.chatMessage(context).copyWith(
+                    color: context.colors.textPrimary,
+                    fontSize: 16,
+                    height: 1.3,
                   ),
+                  cursorColor: context.colors.accent,
                   textInputAction: TextInputAction.send,
                   keyboardType: TextInputType.multiline,
                   textCapitalization: TextCapitalization.sentences,
@@ -185,18 +201,32 @@ class _ChatComposerState extends ConsumerState<ChatComposer> {
                   maxLines: 5,
                   onSubmitted: (_) => _submit(),
                   decoration: InputDecoration(
+                    // Explicitly opts this field out of the app-wide
+                    // InputDecorationTheme's `filled`/OutlineInputBorder
+                    // defaults (see AppTheme) — otherwise the decorator
+                    // paints its own smaller rounded-rect fill *inside*
+                    // this pill-shaped outer container, which is exactly
+                    // the "box inside a box" look this composer must not
+                    // have. This field is visually just text on the
+                    // composer's own surface.
+                    filled: false,
                     border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
                     isCollapsed: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     hintText: widget.hasMessages
                         ? 'Ask a follow-up...'
                         : 'Ask FinAssist anything...',
-                    hintStyle: AppTypography.body.copyWith(
-                      color: AppColors.textMuted,
+                    hintStyle: AppTypography.body(context).copyWith(
+                      color: context.colors.textMuted,
+                      fontSize: 16,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.xs),
               _SendButton(enabled: hasContent, onTap: _submit),
             ],
           ),
@@ -234,7 +264,9 @@ class _SendButtonState extends State<_SendButton> {
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeOut,
         child: Material(
-          color: widget.enabled ? AppColors.accent : AppColors.surfaceElevated,
+          color: widget.enabled
+              ? context.colors.accent
+              : context.colors.surfaceElevated,
           shape: const CircleBorder(),
           child: InkWell(
             onTap: widget.enabled ? widget.onTap : null,
@@ -243,11 +275,13 @@ class _SendButtonState extends State<_SendButton> {
             onTapUp: (_) => _setPressed(false),
             customBorder: const CircleBorder(),
             child: Padding(
-              padding: const EdgeInsets.all(9),
+              padding: const EdgeInsets.all(10),
               child: Icon(
                 Icons.arrow_upward_rounded,
-                size: 18,
-                color: widget.enabled ? Colors.black87 : AppColors.textMuted,
+                size: 20,
+                color: widget.enabled
+                    ? context.colors.textOnAccent
+                    : context.colors.textMuted,
               ),
             ),
           ),

@@ -30,10 +30,10 @@ class FileAttachmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visual = _fileVisualFor(attachment.extensionLabel);
+    final visual = _fileVisualFor(context, attachment.extensionLabel);
 
     return AppCard(
-      color: AppColors.surfaceElevated,
+      color: context.colors.surfaceElevated,
       padding: const EdgeInsets.all(AppSpacing.md),
       onTap: onTap,
       child: Row(
@@ -52,7 +52,7 @@ class FileAttachmentCard extends StatelessWidget {
               children: [
                 Text(
                   attachment.fileName,
-                  style: AppTypography.bodyMedium,
+                  style: AppTypography.bodyMedium(context),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -63,7 +63,7 @@ class FileAttachmentCard extends StatelessWidget {
                       attachment.extensionLabel,
                     if (attachment.sizeLabel.isNotEmpty) attachment.sizeLabel,
                   ].join(' · '),
-                  style: AppTypography.caption,
+                  style: AppTypography.caption(context),
                 ),
               ],
             ),
@@ -75,12 +75,12 @@ class FileAttachmentCard extends StatelessWidget {
               child: InkWell(
                 onTap: onRemove,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
-                child: const Padding(
-                  padding: EdgeInsets.all(AppSpacing.xs),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xs),
                   child: Icon(
                     Icons.close_rounded,
                     size: 18,
-                    color: AppColors.textMuted,
+                    color: context.colors.textMuted,
                   ),
                 ),
               ),
@@ -97,24 +97,21 @@ class _FileVisual {
   final Color color;
 }
 
-_FileVisual _fileVisualFor(String extensionLabel) {
+_FileVisual _fileVisualFor(BuildContext context, String extensionLabel) {
   switch (extensionLabel.toUpperCase()) {
     case 'PDF':
-      return const _FileVisual(
-        Icons.picture_as_pdf_rounded,
-        AppColors.negative,
-      );
+      return _FileVisual(Icons.picture_as_pdf_rounded, context.colors.negative);
     case 'CSV':
     case 'XLS':
     case 'XLSX':
-      return const _FileVisual(
+      return _FileVisual(
         Icons.table_chart_rounded,
-        AppColors.accentStrong,
+        context.colors.accentStrong,
       );
     default:
-      return const _FileVisual(
+      return _FileVisual(
         Icons.description_rounded,
-        AppColors.categoryOthers,
+        context.colors.categoryOthers,
       );
   }
 }

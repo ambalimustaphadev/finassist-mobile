@@ -29,7 +29,7 @@ class AccountCreatedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.onboardingBackground,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -39,29 +39,29 @@ class AccountCreatedScreen extends StatelessWidget {
               Container(
                 width: 96,
                 height: 96,
-                decoration: const BoxDecoration(
-                  color: AppColors.accentDeep,
+                decoration: BoxDecoration(
+                  color: context.colors.accentStrong,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: const Icon(
+                child: Icon(
                   Icons.check_rounded,
-                  color: Colors.white,
+                  color: context.colors.textOnAccent,
                   size: 52,
                 ),
               ),
               const SizedBox(height: AppSpacing.xxl),
               Text.rich(
                 TextSpan(
-                  style: AppTypography.greeting.copyWith(
+                  style: AppTypography.greeting(context).copyWith(
                     fontSize: 28,
-                    color: AppColors.onboardingHeading,
+                    color: context.colors.textPrimary,
                   ),
-                  children: const [
-                    TextSpan(text: 'Account Created\n'),
+                  children: [
+                    const TextSpan(text: 'Account Created\n'),
                     TextSpan(
                       text: 'Successfully!',
-                      style: TextStyle(color: AppColors.accentDeep),
+                      style: TextStyle(color: context.colors.accentStrong),
                     ),
                   ],
                 ),
@@ -72,8 +72,8 @@ class AccountCreatedScreen extends StatelessWidget {
                 "Your account has been created and you're all set to start "
                 'your journey with FinAssist.',
                 textAlign: TextAlign.center,
-                style: AppTypography.body.copyWith(
-                  color: AppColors.onboardingBodyMuted,
+                style: AppTypography.body(context).copyWith(
+                  color: context.colors.textSecondary,
                   fontSize: 15,
                 ),
               ),
@@ -90,7 +90,7 @@ class AccountCreatedScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
-                  color: AppColors.onboardingMintTint,
+                  color: context.colors.accentSoft,
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 child: Column(
@@ -99,8 +99,8 @@ class AccountCreatedScreen extends StatelessWidget {
                       '"A brighter financial future\nstarts with a single '
                       'step."',
                       textAlign: TextAlign.center,
-                      style: AppTypography.body.copyWith(
-                        color: AppColors.accentDeep,
+                      style: AppTypography.body(context).copyWith(
+                        color: context.colors.accentStrong,
                         fontStyle: FontStyle.italic,
                         fontWeight: FontWeight.w500,
                       ),
@@ -108,8 +108,8 @@ class AccountCreatedScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       '— FinAssist',
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.accentDeep,
+                      style: AppTypography.caption(context).copyWith(
+                        color: context.colors.accentStrong,
                       ),
                     ),
                   ],
