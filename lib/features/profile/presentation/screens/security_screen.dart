@@ -16,11 +16,11 @@ class SecurityScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Security', style: AppTypography.screenTitle),
+        title: Text('Security', style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: ListView(
@@ -28,7 +28,7 @@ class SecurityScreen extends StatelessWidget {
           children: [
             Text(
               'How your account is protected.',
-              style: AppTypography.body.copyWith(color: AppColors.textMuted),
+              style: AppTypography.body(context).copyWith(color: context.colors.textMuted),
             ),
             const SizedBox(height: AppSpacing.lg),
             const ProfileSectionLabel(label: 'Password'),
@@ -36,7 +36,7 @@ class SecurityScreen extends StatelessWidget {
               children: [
                 ProfileMenuRow(
                   icon: Icons.lock_outline_rounded,
-                  iconColor: AppColors.accentStrong,
+                  iconColor: context.colors.accentStrong,
                   title: 'Change password',
                   subtitle: 'Your account is protected by a password',
                   onTap: () => Navigator.of(context).push(
@@ -52,7 +52,7 @@ class SecurityScreen extends StatelessWidget {
               'FinAssist keeps your sign in secure with encrypted, '
               'token based authentication. Every request to your account '
               'is verified before it reaches your data.',
-              style: AppTypography.caption,
+              style: AppTypography.caption(context),
             ),
           ],
         ),

@@ -6,6 +6,7 @@ import '../../../../app/router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/theme_mode_controller.dart';
 import '../../../../core/dev/dev_reset.dart';
 import '../../../../shared/widgets/confirm_action_dialog.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
@@ -13,6 +14,7 @@ import '../../../notifications/presentation/providers/notifications_controller.d
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../data/models/preferences.dart';
 import '../providers/preferences_controller.dart';
+import '../widgets/appearance_bottom_sheet.dart';
 import '../widgets/profile_header_card.dart';
 import '../widgets/profile_section.dart';
 import 'about_finassist_screen.dart';
@@ -38,13 +40,19 @@ class ProfileScreen extends ConsumerWidget {
     final hasUnreadNotifications = ref.watch(
       notificationsControllerProvider.select((s) => s.hasUnread),
     );
+    final themeMode = ref.watch(themeModeControllerProvider);
+    final themeModeLabel = switch (themeMode) {
+      ThemeMode.system => 'System',
+      ThemeMode.light => 'Light',
+      ThemeMode.dark => 'Dark',
+    };
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Profile', style: AppTypography.screenTitle),
+        title: Text('Profile', style: AppTypography.screenTitle(context)),
         actions: [
           Semantics(
             button: true,
@@ -54,7 +62,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.notifications_none_rounded),
-                  color: AppColors.textPrimary,
+                  color: context.colors.textPrimary,
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const NotificationsScreen(),
@@ -62,15 +70,15 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
                 if (hasUnreadNotifications)
-                  const Positioned(
+                  Positioned(
                     top: 10,
                     right: 10,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: AppColors.accent,
+                        color: context.colors.accent,
                         shape: BoxShape.circle,
                       ),
-                      child: SizedBox(width: 8, height: 8),
+                      child: const SizedBox(width: 8, height: 8),
                     ),
                   ),
               ],
@@ -95,7 +103,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 ProfileMenuRow(
                   icon: Icons.person_outline_rounded,
-                  iconColor: AppColors.categoryBills,
+                  iconColor: context.colors.categoryBills,
                   title: 'Personal information',
                   subtitle: 'Update your name, username and email',
                   onTap: () => Navigator.of(context).push(
@@ -106,7 +114,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 ProfileMenuRow(
                   icon: Icons.lock_outline_rounded,
-                  iconColor: AppColors.accentStrong,
+                  iconColor: context.colors.accentStrong,
                   title: 'Change password',
                   subtitle: 'Update your password',
                   onTap: () => Navigator.of(context).push(
@@ -117,7 +125,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 ProfileMenuRow(
                   icon: Icons.shield_outlined,
-                  iconColor: AppColors.categoryTransfers,
+                  iconColor: context.colors.categoryTransfers,
                   title: 'Security',
                   subtitle: 'Manage your account security',
                   onTap: () => Navigator.of(context).push(
@@ -133,7 +141,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 ProfileMenuRow(
                   icon: Icons.notifications_none_rounded,
-                  iconColor: AppColors.categoryShopping,
+                  iconColor: context.colors.categoryShopping,
                   title: 'Notifications',
                   subtitle: 'Manage your notification preferences',
                   onTap: () => Navigator.of(context).push(
@@ -143,8 +151,15 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
                 ProfileMenuRow(
+                  icon: Icons.brightness_6_outlined,
+                  iconColor: context.colors.accentStrong,
+                  title: 'Appearance',
+                  subtitle: themeModeLabel,
+                  onTap: () => showAppearanceBottomSheet(context),
+                ),
+                ProfileMenuRow(
                   icon: Icons.language_rounded,
-                  iconColor: AppColors.categoryBills,
+                  iconColor: context.colors.categoryBills,
                   title: 'Language & currency',
                   subtitle:
                       '$languageLabel · ${currencyOption.symbol} '
@@ -164,7 +179,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 ProfileMenuRow(
                   icon: Icons.privacy_tip_outlined,
-                  iconColor: AppColors.categoryBills,
+                  iconColor: context.colors.categoryBills,
                   title: 'Privacy',
                   subtitle: 'What FinAssist knows and why',
                   onTap: () => Navigator.of(context).push(
@@ -173,7 +188,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 ProfileMenuRow(
                   icon: Icons.tune_rounded,
-                  iconColor: AppColors.accentStrong,
+                  iconColor: context.colors.accentStrong,
                   title: 'Data & AI controls',
                   subtitle: 'Control how your information is used',
                   onTap: () => Navigator.of(context).push(
@@ -184,7 +199,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 ProfileMenuRow(
                   icon: Icons.vpn_key_outlined,
-                  iconColor: AppColors.categoryTransfers,
+                  iconColor: context.colors.categoryTransfers,
                   title: 'Manage app permissions',
                   subtitle: 'Camera and notification access',
                   onTap: () => Navigator.of(context).push(
@@ -202,7 +217,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 ProfileMenuRow(
                   icon: Icons.help_outline_rounded,
-                  iconColor: AppColors.categoryBills,
+                  iconColor: context.colors.categoryBills,
                   title: 'Help & FAQ',
                   subtitle: 'Get help and find answers',
                   onTap: () => Navigator.of(context).push(
@@ -211,7 +226,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 ProfileMenuRow(
                   icon: Icons.chat_bubble_outline_rounded,
-                  iconColor: AppColors.accentStrong,
+                  iconColor: context.colors.accentStrong,
                   title: 'Contact support',
                   subtitle: 'Reach out to our support team',
                   onTap: () => Navigator.of(context).push(
@@ -229,7 +244,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 ProfileMenuRow(
                   icon: Icons.info_outline_rounded,
-                  iconColor: AppColors.categoryTransfers,
+                  iconColor: context.colors.categoryTransfers,
                   title: 'About FinAssist',
                   subtitle: 'Version 1.0.0',
                   onTap: () => Navigator.of(context).push(
@@ -248,7 +263,7 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   ProfileMenuRow(
                     icon: Icons.restart_alt_rounded,
-                    iconColor: AppColors.negative,
+                    iconColor: context.colors.negative,
                     title: 'Reset app state',
                     subtitle:
                         'Clear local session & onboarding state for testing',
@@ -303,7 +318,7 @@ class _LogoutButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Material(
-      color: AppColors.negative.withValues(alpha: 0.12),
+      color: context.colors.negative.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -313,16 +328,16 @@ class _LogoutButton extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.logout_rounded,
-                color: AppColors.negative,
+                color: context.colors.negative,
                 size: 18,
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Log out',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.negative,
+                style: AppTypography.bodyMedium(context).copyWith(
+                  color: context.colors.negative,
                   fontWeight: FontWeight.w700,
                 ),
               ),

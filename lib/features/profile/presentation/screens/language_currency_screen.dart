@@ -27,10 +27,10 @@ class LanguageCurrencyScreen extends ConsumerWidget {
           ..showSnackBar(
             SnackBar(
               behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.surfaceElevated,
+              backgroundColor: context.colors.surfaceElevated,
               content: Text(
                 next.saveError!,
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: context.colors.textPrimary),
               ),
             ),
           );
@@ -39,11 +39,11 @@ class LanguageCurrencyScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Language & currency', style: AppTypography.screenTitle),
+        title: Text('Language & currency', style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: ListView(
@@ -53,7 +53,7 @@ class LanguageCurrencyScreen extends ConsumerWidget {
             Text(
               "Your preference is saved, but FinAssist's interface is "
               'English only today. Full translation is coming.',
-              style: AppTypography.caption,
+              style: AppTypography.caption(context),
             ),
             const SizedBox(height: AppSpacing.sm),
             for (final option in supportedLanguages)
@@ -69,7 +69,7 @@ class LanguageCurrencyScreen extends ConsumerWidget {
             Text(
               'Choose how FinAssist displays currency in conversations and '
               'calculations.',
-              style: AppTypography.caption,
+              style: AppTypography.caption(context),
             ),
             const SizedBox(height: AppSpacing.sm),
             for (final option in supportedCurrencies)
@@ -98,7 +98,7 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
         label,
-        style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+        style: AppTypography.bodyMedium(context).copyWith(color: context.colors.textPrimary),
       ),
     );
   }
@@ -120,7 +120,7 @@ class _CurrencyOptionRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Material(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: InkWell(
           onTap: onTap,
@@ -132,21 +132,21 @@ class _CurrencyOptionRow extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Text(option.symbol, style: AppTypography.sectionHeading),
+                Text(option.symbol, style: AppTypography.sectionHeading(context)),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(option.code, style: AppTypography.bodyMedium),
-                      Text(option.label, style: AppTypography.caption),
+                      Text(option.code, style: AppTypography.bodyMedium(context)),
+                      Text(option.label, style: AppTypography.caption(context)),
                     ],
                   ),
                 ),
                 if (selected)
-                  const Icon(
+                  Icon(
                     Icons.check_circle_rounded,
-                    color: AppColors.accent,
+                    color: context.colors.accent,
                   ),
               ],
             ),
@@ -169,7 +169,7 @@ class _OptionRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Material(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: InkWell(
           onTap: onTap,
@@ -181,11 +181,11 @@ class _OptionRow extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Expanded(child: Text(label, style: AppTypography.bodyMedium)),
+                Expanded(child: Text(label, style: AppTypography.bodyMedium(context))),
                 if (selected)
-                  const Icon(
+                  Icon(
                     Icons.check_circle_rounded,
-                    color: AppColors.accent,
+                    color: context.colors.accent,
                   ),
               ],
             ),

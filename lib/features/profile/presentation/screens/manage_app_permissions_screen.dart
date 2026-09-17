@@ -68,11 +68,11 @@ class _ManageAppPermissionsScreenState extends State<ManageAppPermissionsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Manage app permissions', style: AppTypography.screenTitle),
+        title: Text('Manage app permissions', style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: ListView(
@@ -80,7 +80,7 @@ class _ManageAppPermissionsScreenState extends State<ManageAppPermissionsScreen>
           children: [
             Text(
               "What FinAssist can access on your device.",
-              style: AppTypography.body.copyWith(color: AppColors.textMuted),
+              style: AppTypography.body(context).copyWith(color: context.colors.textMuted),
             ),
             const SizedBox(height: AppSpacing.lg),
             _PermissionRow(
@@ -122,7 +122,7 @@ class _PermissionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = this.status;
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: InkWell(
         onTap: openAppSettings,
@@ -132,31 +132,31 @@ class _PermissionRow extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconBadge(icon: icon, color: AppColors.accentStrong),
+              IconBadge(icon: icon, color: context.colors.accentStrong),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: AppTypography.bodyMedium),
+                    Text(title, style: AppTypography.bodyMedium(context)),
                     const SizedBox(height: 2),
-                    Text(explanation, style: AppTypography.caption),
+                    Text(explanation, style: AppTypography.caption(context)),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       status == null ? 'Checking...' : _label(status),
-                      style: AppTypography.caption.copyWith(
+                      style: AppTypography.caption(context).copyWith(
                         color: status != null && status.isGranted
-                            ? AppColors.accentStrong
-                            : AppColors.textMuted,
+                            ? context.colors.accentStrong
+                            : context.colors.textMuted,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.textMuted,
+                color: context.colors.textMuted,
                 size: 22,
               ),
             ],

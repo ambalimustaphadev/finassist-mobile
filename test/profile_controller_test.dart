@@ -178,6 +178,66 @@ void main() {
     expect(controller.state.profile?.profilePictureUrl, isNull);
   });
 
+  test(
+    'uploading picture B right after picture A replaces A with B in state '
+    "— never stuck on A's URL",
+    () async {
+      final repo = _FakeProfileRepository(_profile());
+      final controller = ProfileController(repo, 'user-1');
+      await _waitUntil(
+        () => controller.state.status == ProfileLoadStatus.loaded,
+      );
+
+      repo.setProfile(_profile(pictureUrl: 'https://signed.example/a.jpg'));
+      final okA = await controller.uploadProfilePicture(
+        File('/tmp/a.jpg'),
+      );
+      expect(okA, isTrue);
+      expect(
+        controller.state.profile?.profilePictureUrl,
+        'https://signed.example/a.jpg',
+      );
+
+      repo.setProfile(_profile(pictureUrl: 'https://signed.example/b.jpg'));
+      final okB = await controller.uploadProfilePicture(
+        File('/tmp/b.jpg'),
+      );
+      expect(okB, isTrue);
+      expect(
+        controller.state.profile?.profilePictureUrl,
+        'https://signed.example/b.jpg',
+      );
+    },
+  );
+
+  test(
+    'an upload failure that is NOT an ApiException (e.g. an unexpected '
+    'response shape the client cannot parse) still resolves to a visible '
+    'pictureError instead of an unhandled exception that silently leaves '
+    'state unchanged',
+    () async {
+      final repo = _FakeProfileRepository(
+        _profile(pictureUrl: 'https://signed.example/current.jpg'),
+      )..uploadError = FormatException('unexpected field shape');
+      final controller = ProfileController(repo, 'user-1');
+      await _waitUntil(
+        () => controller.state.status == ProfileLoadStatus.loaded,
+      );
+
+      final ok = await controller.uploadProfilePicture(
+        File('/tmp/does-not-need-to-exist.jpg'),
+      );
+
+      expect(ok, isFalse);
+      expect(controller.state.pictureError, isNotNull);
+      expect(controller.state.isUploadingPicture, isFalse);
+      expect(
+        controller.state.profile?.profilePictureUrl,
+        'https://signed.example/current.jpg',
+      );
+    },
+  );
+
   test('a failed upload surfaces pictureError and leaves the previous profile '
       'picture in place — the failed attempt is never assumed to have '
       'succeeded', () async {

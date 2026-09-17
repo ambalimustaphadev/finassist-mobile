@@ -94,13 +94,13 @@ class _ProfileHeaderCardState extends ConsumerState<ProfileHeaderCard> {
                       color: Colors.black.withValues(alpha: 0.35),
                       shape: BoxShape.circle,
                     ),
-                    child: const Center(
+                    child: Center(
                       child: SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.accent,
+                          color: context.colors.accent,
                         ),
                       ),
                     ),
@@ -113,7 +113,7 @@ class _ProfileHeaderCardState extends ConsumerState<ProfileHeaderCard> {
                   button: true,
                   label: 'Change profile picture',
                   child: Material(
-                    color: AppColors.accent,
+                    color: context.colors.accent,
                     shape: const CircleBorder(),
                     child: InkWell(
                       customBorder: const CircleBorder(),
@@ -143,20 +143,20 @@ class _ProfileHeaderCardState extends ConsumerState<ProfileHeaderCard> {
                 children: [
                   Text(
                     _displayName(profile, authUser),
-                    style: AppTypography.sectionHeading,
+                    style: AppTypography.sectionHeading(context),
                   ),
                   if (_displayUsername(profile, authUser).isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
                       '@${_displayUsername(profile, authUser)}',
-                      style: AppTypography.body,
+                      style: AppTypography.body(context),
                     ),
                   ],
                   if (_displayEmail(profile, authUser).isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
                       _displayEmail(profile, authUser),
-                      style: AppTypography.caption,
+                      style: AppTypography.caption(context),
                     ),
                   ],
                 ],
@@ -184,6 +184,14 @@ class _ProfileHeaderCardState extends ConsumerState<ProfileHeaderCard> {
 
     switch (result.outcome) {
       case ProfileImagePickOutcome.success:
+        // `ProfileImagePickerService` always persists to the same
+        // deterministic per-user path (`profile_$userId$extension`), so
+        // Flutter's image cache — keyed by `FileImage`'s path, not the
+        // file's actual content — would otherwise keep showing whatever
+        // bitmap it last decoded for that path the first time a *second*
+        // photo is picked in the same app session. Evict it before
+        // displaying so the just-copied bytes are what's actually shown.
+        await FileImage(File(result.filePath!)).evict();
         setState(() => _localPreviewPath = result.filePath);
         await ref
             .read(profileControllerProvider.notifier)
@@ -254,16 +262,16 @@ class _ProfileHeaderCardState extends ConsumerState<ProfileHeaderCard> {
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surfaceElevated,
+          backgroundColor: context.colors.surfaceElevated,
           duration: const Duration(seconds: 5),
           content: Text(
             message,
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: context.colors.textPrimary),
           ),
           action: canOpenSettings
               ? SnackBarAction(
                   label: 'Open Settings',
-                  textColor: AppColors.accent,
+                  textColor: context.colors.accent,
                   onPressed: openAppSettings,
                 )
               : null,

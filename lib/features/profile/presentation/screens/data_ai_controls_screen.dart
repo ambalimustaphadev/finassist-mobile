@@ -30,10 +30,10 @@ class DataAiControlsScreen extends ConsumerWidget {
           ..showSnackBar(
             SnackBar(
               behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.surfaceElevated,
+              backgroundColor: context.colors.surfaceElevated,
               content: Text(
                 next.saveError!,
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: context.colors.textPrimary),
               ),
             ),
           );
@@ -42,17 +42,17 @@ class DataAiControlsScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Data & AI controls', style: AppTypography.screenTitle),
+        title: Text('Data & AI controls', style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: preferences == null
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(
-                  color: AppColors.accent,
+                  color: context.colors.accent,
                   strokeWidth: 2.5,
                 ),
               )
@@ -61,8 +61,8 @@ class DataAiControlsScreen extends ConsumerWidget {
                 children: [
                   Text(
                     'Control how your information is used with FinAssist.',
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textMuted,
+                    style: AppTypography.body(context).copyWith(
+                      color: context.colors.textMuted,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -72,7 +72,7 @@ class DataAiControlsScreen extends ConsumerWidget {
                     'sometimes be incomplete or incorrect, so review '
                     'important information before making a financial '
                     'decision.',
-                    style: AppTypography.body,
+                    style: AppTypography.body(context),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   Container(
@@ -81,7 +81,7 @@ class DataAiControlsScreen extends ConsumerWidget {
                       vertical: AppSpacing.sm,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: context.colors.surface,
                       borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
                     child: Row(
@@ -92,13 +92,13 @@ class DataAiControlsScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 'Proactive suggestions',
-                                style: AppTypography.bodyMedium,
+                                style: AppTypography.bodyMedium(context),
                               ),
                               Text(
                                 'Let FinAssist occasionally share helpful '
                                 'tips and things to consider during a '
                                 'conversation.',
-                                style: AppTypography.caption,
+                                style: AppTypography.caption(context),
                               ),
                             ],
                           ),
@@ -110,7 +110,7 @@ class DataAiControlsScreen extends ConsumerWidget {
                               : (value) => notifier.update({
                                   'proactive_suggestions': value,
                                 }),
-                          activeThumbColor: AppColors.accent,
+                          activeThumbColor: context.colors.accent,
                         ),
                       ],
                     ),
@@ -121,7 +121,7 @@ class DataAiControlsScreen extends ConsumerWidget {
                     children: [
                       ProfileMenuRow(
                         icon: Icons.vpn_key_outlined,
-                        iconColor: AppColors.categoryTransfers,
+                        iconColor: context.colors.categoryTransfers,
                         title: 'Manage app permissions',
                         subtitle: 'Camera and notification access',
                         onTap: () => Navigator.of(context).push(

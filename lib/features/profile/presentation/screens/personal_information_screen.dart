@@ -101,12 +101,12 @@ class _PersonalInformationScreenState
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
+          SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.surfaceElevated,
+            backgroundColor: context.colors.surfaceElevated,
             content: Text(
               'Your details have been updated.',
-              style: TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: context.colors.textPrimary),
             ),
           ),
         );
@@ -118,11 +118,11 @@ class _PersonalInformationScreenState
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surfaceElevated,
+          backgroundColor: context.colors.surfaceElevated,
           content: Text(
             ref.read(profileControllerProvider).saveError ??
                 "Couldn't update your details. Try again.",
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: context.colors.textPrimary),
           ),
         ),
       );
@@ -146,18 +146,18 @@ class _PersonalInformationScreenState
         _handlePop();
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         appBar: AppBar(
-          backgroundColor: AppColors.background,
+          backgroundColor: context.colors.background,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
-            color: AppColors.textPrimary,
+            color: context.colors.textPrimary,
             onPressed: _handlePop,
           ),
           title: Text(
             'Personal Information',
-            style: AppTypography.screenTitle,
+            style: AppTypography.screenTitle(context),
           ),
         ),
         body: SafeArea(
@@ -171,8 +171,8 @@ class _PersonalInformationScreenState
             children: [
               Text(
                 'Manage the details associated with your account.',
-                style: AppTypography.body.copyWith(
-                  color: AppColors.textMuted,
+                style: AppTypography.body(context).copyWith(
+                  color: context.colors.textMuted,
                 ),
               ),
               const SizedBox(height: AppSpacing.xxl),
@@ -205,7 +205,7 @@ class _PersonalInformationScreenState
                 ),
                 child: Text(
                   'This is how you appear on FinAssist and can be seen by others.',
-                  style: AppTypography.caption,
+                  style: AppTypography.caption(context),
                 ),
               ),
               const SizedBox(height: AppSpacing.xxl),
@@ -226,8 +226,8 @@ class _PersonalInformationScreenState
                 width: double.infinity,
                 child: Material(
                   color: _hasUnsavedChanges
-                      ? AppColors.accentDeep
-                      : AppColors.accentDeep.withValues(alpha: 0.35),
+                      ? context.colors.accent
+                      : context.colors.accent.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   child: InkWell(
                     onTap: profileState.isSaving || !_hasUnsavedChanges
@@ -239,19 +239,19 @@ class _PersonalInformationScreenState
                         vertical: AppSpacing.md,
                       ),
                       child: profileState.isSaving
-                          ? const SizedBox(
+                          ? SizedBox(
                               height: 18,
                               width: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.2,
-                                color: Colors.white,
+                                color: context.colors.textOnAccent,
                               ),
                             )
-                          : const Text(
+                          : Text(
                               'Save changes',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: context.colors.textOnAccent,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 15,
                               ),
@@ -290,15 +290,15 @@ class _SectionHeader extends StatelessWidget {
         Text(
           title,
           style: dense
-              ? AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+              ? AppTypography.bodyMedium(context).copyWith(
+                  color: context.colors.textSecondary,
                 )
-              : AppTypography.sectionHeading,
+              : AppTypography.sectionHeading(context),
         ),
         const SizedBox(height: 2),
         Text(
           subtitle,
-          style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+          style: AppTypography.caption(context).copyWith(color: context.colors.textMuted),
         ),
       ],
     );
@@ -330,17 +330,17 @@ class _EditableField extends StatelessWidget {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
             color: errorText != null
-                ? AppColors.negative
-                : AppColors.borderSubtle,
+                ? context.colors.negative
+                : context.colors.borderSubtle,
           ),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: AppColors.textMuted),
+            Icon(icon, size: 20, color: context.colors.textMuted),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -349,15 +349,15 @@ class _EditableField extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textMuted,
+                    style: AppTypography.caption(context).copyWith(
+                      color: context.colors.textMuted,
                     ),
                   ),
                   TextField(
                     controller: controller,
                     textCapitalization: TextCapitalization.words,
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textPrimary,
+                    style: AppTypography.body(context).copyWith(
+                      color: context.colors.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                     decoration: InputDecoration(
@@ -369,8 +369,8 @@ class _EditableField extends StatelessWidget {
                       focusedErrorBorder: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
                       errorText: errorText,
-                      errorStyle: const TextStyle(
-                        color: AppColors.negative,
+                      errorStyle: TextStyle(
+                        color: context.colors.negative,
                         fontSize: 12,
                       ),
                     ),
@@ -410,13 +410,13 @@ class _ReadOnlyField extends StatelessWidget {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surfaceHighlight,
+          color: context.colors.surfaceHighlight,
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: AppColors.borderSubtle),
+          border: Border.all(color: context.colors.borderSubtle),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: AppColors.textMuted),
+            Icon(icon, size: 20, color: context.colors.textMuted),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -425,14 +425,14 @@ class _ReadOnlyField extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textMuted,
+                    style: AppTypography.caption(context).copyWith(
+                      color: context.colors.textMuted,
                     ),
                   ),
                   Text(
                     value,
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textSecondary,
+                    style: AppTypography.body(context).copyWith(
+                      color: context.colors.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -442,7 +442,7 @@ class _ReadOnlyField extends StatelessWidget {
             Icon(
               Icons.lock_outline_rounded,
               size: 16,
-              color: AppColors.textMuted.withValues(alpha: 0.6),
+              color: context.colors.textMuted.withValues(alpha: 0.6),
             ),
           ],
         ),

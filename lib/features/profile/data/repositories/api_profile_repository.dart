@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:mime/mime.dart';
 
 import '../../../../core/network/api_client.dart';
@@ -41,6 +42,9 @@ class ApiProfileRepository implements ProfileRepository {
       file: file,
       contentType: contentType,
     );
+    if (kDebugMode) {
+      debugPrint('[ApiProfileRepository] POST /api/profile/picture -> $json');
+    }
     return Profile.fromJson(json);
   }
 }

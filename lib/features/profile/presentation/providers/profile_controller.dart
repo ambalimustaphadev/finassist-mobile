@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/api_config.dart';
@@ -164,6 +165,12 @@ class ProfileController extends StateNotifier<ProfileState> {
     );
     try {
       final profile = await _repository.getProfile();
+      if (kDebugMode) {
+        debugPrint(
+          '[ProfileController] loaded profile, '
+          'profilePictureUrl=${profile.profilePictureUrl}',
+        );
+      }
       state = state.copyWith(
         status: ProfileLoadStatus.loaded,
         profile: profile,
@@ -222,12 +229,32 @@ class ProfileController extends StateNotifier<ProfileState> {
     state = state.copyWith(isUploadingPicture: true, clearPictureError: true);
     try {
       final profile = await _repository.uploadProfilePicture(file);
+      if (kDebugMode) {
+        debugPrint(
+          '[ProfileController] upload succeeded, '
+          'profilePictureUrl=${profile.profilePictureUrl}',
+        );
+      }
       state = state.copyWith(isUploadingPicture: false, profile: profile);
       return true;
     } on ApiException catch (e) {
       state = state.copyWith(
         isUploadingPicture: false,
         pictureError: e.message,
+      );
+      return false;
+    } catch (e) {
+      // Not just `ApiException` — a response the client can't parse (e.g.
+      // an unexpected shape) must still resolve to a visible error rather
+      // than an unhandled Future exception that silently leaves `state`
+      // (and thus the displayed picture) exactly as it was before the
+      // upload, with nothing telling the caller it failed.
+      if (kDebugMode) {
+        debugPrint('[ProfileController] upload failed to parse: $e');
+      }
+      state = state.copyWith(
+        isUploadingPicture: false,
+        pictureError: "Couldn't update your profile picture. Please try again.",
       );
       return false;
     }

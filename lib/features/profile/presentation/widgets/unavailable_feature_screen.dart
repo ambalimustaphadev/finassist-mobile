@@ -23,11 +23,11 @@ class UnavailableFeatureScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text(title, style: AppTypography.screenTitle),
+        title: Text(title, style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: Center(
@@ -38,21 +38,21 @@ class UnavailableFeatureScreen extends StatelessWidget {
               children: [
                 IconBadge(
                   icon: icon,
-                  color: AppColors.textMuted,
+                  color: context.colors.textMuted,
                   size: 56,
                   iconSize: 26,
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
                   "This isn't available yet",
-                  style: AppTypography.sectionHeading,
+                  style: AppTypography.sectionHeading(context),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: AppTypography.body,
+                  style: AppTypography.body(context),
                 ),
               ],
             ),

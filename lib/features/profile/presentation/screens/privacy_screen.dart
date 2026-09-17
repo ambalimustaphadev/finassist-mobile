@@ -17,11 +17,11 @@ class PrivacyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Privacy', style: AppTypography.screenTitle),
+        title: Text('Privacy', style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: ListView(
@@ -29,7 +29,7 @@ class PrivacyScreen extends StatelessWidget {
           children: [
             Text(
               'What FinAssist knows about you, and why.',
-              style: AppTypography.body.copyWith(color: AppColors.textMuted),
+              style: AppTypography.body(context).copyWith(color: context.colors.textMuted),
             ),
             const SizedBox(height: AppSpacing.xl),
             const _Category(
@@ -73,7 +73,7 @@ class PrivacyScreen extends StatelessWidget {
               children: [
                 ProfileMenuRow(
                   icon: Icons.tune_rounded,
-                  iconColor: AppColors.accentStrong,
+                  iconColor: context.colors.accentStrong,
                   title: 'Data & AI controls',
                   subtitle: 'Control how your information is used',
                   onTap: () => Navigator.of(context).push(
@@ -84,7 +84,7 @@ class PrivacyScreen extends StatelessWidget {
                 ),
                 ProfileMenuRow(
                   icon: Icons.vpn_key_outlined,
-                  iconColor: AppColors.categoryTransfers,
+                  iconColor: context.colors.categoryTransfers,
                   title: 'Manage app permissions',
                   subtitle: 'Camera and notification access',
                   onTap: () => Navigator.of(context).push(
@@ -115,9 +115,9 @@ class _Category extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: AppTypography.bodyMedium),
+          Text(title, style: AppTypography.bodyMedium(context)),
           const SizedBox(height: 4),
-          Text(body, style: AppTypography.body),
+          Text(body, style: AppTypography.body(context)),
         ],
       ),
     );

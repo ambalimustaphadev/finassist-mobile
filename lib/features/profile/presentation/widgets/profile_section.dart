@@ -18,7 +18,7 @@ class ProfileSectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Text(
         label,
-        style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+        style: AppTypography.bodyMedium(context).copyWith(color: context.colors.textPrimary),
       ),
     );
   }
@@ -39,7 +39,7 @@ class ProfileSectionCard extends StatelessWidget {
       child: Column(
         children: [
           for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const Divider(height: 1, color: AppColors.border),
+            if (i > 0) Divider(height: 1, color: context.colors.border),
             children[i],
           ],
         ],
@@ -74,8 +74,8 @@ class ProfileMenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final titleColor = isDestructive
-        ? AppColors.negative
-        : AppColors.textPrimary;
+        ? context.colors.negative
+        : context.colors.textPrimary;
 
     return Material(
       color: Colors.transparent,
@@ -96,7 +96,7 @@ class ProfileMenuRow extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppTypography.bodyMedium.copyWith(
+                      style: AppTypography.bodyMedium(context).copyWith(
                         color: titleColor,
                       ),
                     ),
@@ -105,7 +105,7 @@ class ProfileMenuRow extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.caption,
+                      style: AppTypography.caption(context),
                     ),
                   ],
                 ),
@@ -114,9 +114,9 @@ class ProfileMenuRow extends StatelessWidget {
                 trailing!,
                 const SizedBox(width: AppSpacing.xs),
               ],
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.textMuted,
+                color: context.colors.textMuted,
                 size: 22,
               ),
             ],

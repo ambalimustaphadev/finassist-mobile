@@ -145,11 +145,11 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
               .toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Help & FAQ', style: AppTypography.screenTitle),
+        title: Text('Help & FAQ', style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: Column(
@@ -165,20 +165,20 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
                 controller: _searchController,
                 textCapitalization: TextCapitalization.sentences,
                 onChanged: (value) => setState(() => _query = value),
-                style: AppTypography.body.copyWith(
-                  color: AppColors.textPrimary,
+                style: AppTypography.body(context).copyWith(
+                  color: context.colors.textPrimary,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Search for a topic',
-                  hintStyle: AppTypography.body.copyWith(
-                    color: AppColors.textMuted,
+                  hintStyle: AppTypography.body(context).copyWith(
+                    color: context.colors.textMuted,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.search_rounded,
-                    color: AppColors.textMuted,
+                    color: context.colors.textMuted,
                   ),
                   filled: true,
-                  fillColor: AppColors.surface,
+                  fillColor: context.colors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                     borderSide: BorderSide.none,
@@ -194,8 +194,8 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
                   ? Center(
                       child: Text(
                         'No results for "$_query".',
-                        style: AppTypography.body.copyWith(
-                          color: AppColors.textMuted,
+                        style: AppTypography.body(context).copyWith(
+                          color: context.colors.textMuted,
                         ),
                       ),
                     )
@@ -215,8 +215,8 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
                             ),
                             child: Text(
                               category.title,
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textPrimary,
+                              style: AppTypography.bodyMedium(context).copyWith(
+                                color: context.colors.textPrimary,
                               ),
                             ),
                           ),
@@ -261,7 +261,7 @@ class _FaqTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Material(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         child: InkWell(
           onTap: onTap,
@@ -276,20 +276,20 @@ class _FaqTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item.question,
-                        style: AppTypography.bodyMedium,
+                        style: AppTypography.bodyMedium(context),
                       ),
                     ),
                     Icon(
                       expanded
                           ? Icons.keyboard_arrow_up_rounded
                           : Icons.keyboard_arrow_down_rounded,
-                      color: AppColors.textMuted,
+                      color: context.colors.textMuted,
                     ),
                   ],
                 ),
                 if (expanded) ...[
                   const SizedBox(height: AppSpacing.sm),
-                  Text(item.answer, style: AppTypography.body),
+                  Text(item.answer, style: AppTypography.body(context)),
                 ],
               ],
             ),

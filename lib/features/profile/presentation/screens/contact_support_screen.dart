@@ -90,12 +90,12 @@ class _ContactSupportScreenState extends ConsumerState<ContactSupportScreen> {
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surfaceElevated,
+          backgroundColor: context.colors.surfaceElevated,
           content: Text(
             opened
                 ? 'Opening your email app so you can send this to us.'
                 : "Couldn't open your email app. Please try again.",
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: context.colors.textPrimary),
           ),
         ),
       );
@@ -104,11 +104,11 @@ class _ContactSupportScreenState extends ConsumerState<ContactSupportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Contact support', style: AppTypography.screenTitle),
+        title: Text('Contact support', style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: ListView(
@@ -116,24 +116,24 @@ class _ContactSupportScreenState extends ConsumerState<ContactSupportScreen> {
           children: [
             Text(
               'Tell us what happened and we\'ll get back to you.',
-              style: AppTypography.body.copyWith(color: AppColors.textMuted),
+              style: AppTypography.body(context).copyWith(color: context.colors.textMuted),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text('Category', style: AppTypography.bodyMedium),
+            Text('Category', style: AppTypography.bodyMedium(context)),
             const SizedBox(height: AppSpacing.xs),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: _category,
                   isExpanded: true,
-                  dropdownColor: AppColors.surfaceElevated,
-                  style: AppTypography.body.copyWith(
-                    color: AppColors.textPrimary,
+                  dropdownColor: context.colors.surfaceElevated,
+                  style: AppTypography.body(context).copyWith(
+                    color: context.colors.textPrimary,
                   ),
                   items: [
                     for (final category in _categories)
@@ -146,21 +146,21 @@ class _ContactSupportScreenState extends ConsumerState<ContactSupportScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text('Description', style: AppTypography.bodyMedium),
+            Text('Description', style: AppTypography.bodyMedium(context)),
             const SizedBox(height: AppSpacing.xs),
             TextField(
               controller: _descriptionController,
               textCapitalization: TextCapitalization.sentences,
               maxLines: 6,
-              style: AppTypography.body.copyWith(color: AppColors.textPrimary),
+              style: AppTypography.body(context).copyWith(color: context.colors.textPrimary),
               decoration: InputDecoration(
                 hintText: 'What happened?',
-                hintStyle: AppTypography.body.copyWith(
-                  color: AppColors.textMuted,
+                hintStyle: AppTypography.body(context).copyWith(
+                  color: context.colors.textMuted,
                 ),
                 errorText: _descriptionError,
                 filled: true,
-                fillColor: AppColors.surface,
+                fillColor: context.colors.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide.none,
@@ -172,7 +172,7 @@ class _ContactSupportScreenState extends ConsumerState<ContactSupportScreen> {
             SizedBox(
               width: double.infinity,
               child: Material(
-                color: AppColors.accent,
+                color: context.colors.accent,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
                 child: InkWell(
                   onTap: _isSending ? null : _send,

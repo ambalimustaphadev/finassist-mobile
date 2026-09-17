@@ -19,11 +19,11 @@ class AboutFinAssistScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('About FinAssist', style: AppTypography.screenTitle),
+        title: Text('About FinAssist', style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: ListView(
@@ -34,18 +34,18 @@ class AboutFinAssistScreen extends StatelessWidget {
                 children: [
                   const FinAssistLogo(size: 72),
                   const SizedBox(height: AppSpacing.md),
-                  Text('FinAssist', style: AppTypography.greeting),
+                  Text('FinAssist', style: AppTypography.greeting(context)),
                   const SizedBox(height: 2),
                   Text(
                     'Your AI financial companion.',
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textMuted,
+                    style: AppTypography.body(context).copyWith(
+                      color: context.colors.textMuted,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Version $_appVersion ($_appBuild)',
-                    style: AppTypography.caption,
+                    style: AppTypography.caption(context),
                   ),
                 ],
               ),
@@ -56,7 +56,7 @@ class AboutFinAssistScreen extends StatelessWidget {
               'conversation. Ask questions, understand financial '
               'concepts, explore decisions and get clearer answers from '
               "the information you choose to share.",
-              style: AppTypography.body,
+              style: AppTypography.body(context),
             ),
             const SizedBox(height: AppSpacing.xl),
             const _CapabilityRow(
@@ -92,13 +92,13 @@ class AboutFinAssistScreen extends StatelessWidget {
               'responses. AI responses can sometimes be incomplete or '
               'incorrect, so review important information before making '
               'financial decisions.',
-              style: AppTypography.body.copyWith(color: AppColors.textMuted),
+              style: AppTypography.body(context).copyWith(color: context.colors.textMuted),
             ),
             const SizedBox(height: AppSpacing.lg),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
               child: Text(
@@ -107,7 +107,7 @@ class AboutFinAssistScreen extends StatelessWidget {
                 'a substitute for professional financial, legal, tax or '
                 'investment advice. Always verify important decisions '
                 'with an appropriately qualified professional.',
-                style: AppTypography.caption,
+                style: AppTypography.caption(context),
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -120,8 +120,8 @@ class AboutFinAssistScreen extends StatelessWidget {
                 ),
                 child: Text(
                   'Open source licenses',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.accent,
+                  style: AppTypography.bodyMedium(context).copyWith(
+                    color: context.colors.accent,
                   ),
                 ),
               ),
@@ -151,15 +151,15 @@ class _CapabilityRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.accentStrong, size: 20),
+          Icon(icon, color: context.colors.accentStrong, size: 20),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTypography.bodyMedium),
+                Text(title, style: AppTypography.bodyMedium(context)),
                 const SizedBox(height: 2),
-                Text(body, style: AppTypography.body),
+                Text(body, style: AppTypography.body(context)),
               ],
             ),
           ),

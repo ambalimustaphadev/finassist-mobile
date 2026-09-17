@@ -32,15 +32,15 @@ class _ProfileImageSourceSheet extends StatelessWidget {
           AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
+          color: context.colors.surfaceElevated,
           borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.colors.border),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Change profile picture', style: AppTypography.sectionHeading),
+            Text('Change profile picture', style: AppTypography.sectionHeading(context)),
             const SizedBox(height: AppSpacing.md),
             _SourceRow(
               icon: Icons.photo_outlined,
@@ -68,8 +68,8 @@ class _ProfileImageSourceSheet extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
                   'Cancel',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textMuted,
+                  style: AppTypography.bodyMedium(context).copyWith(
+                    color: context.colors.textMuted,
                   ),
                 ),
               ),
@@ -110,18 +110,18 @@ class _SourceRow extends StatelessWidget {
                 height: 40,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
-                child: Icon(icon, color: AppColors.accent, size: 20),
+                child: Icon(icon, color: context.colors.accent, size: 20),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: AppTypography.bodyMedium),
-                    Text(subtitle, style: AppTypography.caption),
+                    Text(title, style: AppTypography.bodyMedium(context)),
+                    Text(subtitle, style: AppTypography.caption(context)),
                   ],
                 ),
               ),

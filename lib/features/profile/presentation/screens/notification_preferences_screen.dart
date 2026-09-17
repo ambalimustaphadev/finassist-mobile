@@ -74,10 +74,10 @@ class _NotificationPreferencesScreenState
           ..showSnackBar(
             SnackBar(
               behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.surfaceElevated,
+              backgroundColor: context.colors.surfaceElevated,
               content: Text(
                 next.saveError!,
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: context.colors.textPrimary),
               ),
             ),
           );
@@ -86,17 +86,17 @@ class _NotificationPreferencesScreenState
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text('Notifications', style: AppTypography.screenTitle),
+        title: Text('Notifications', style: AppTypography.screenTitle(context)),
       ),
       body: SafeArea(
         child: preferences == null
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(
-                  color: AppColors.accent,
+                  color: context.colors.accent,
                   strokeWidth: 2.5,
                 ),
               )
@@ -105,8 +105,8 @@ class _NotificationPreferencesScreenState
                 children: [
                   Text(
                     'Choose which updates FinAssist can send you.',
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textMuted,
+                    style: AppTypography.body(context).copyWith(
+                      color: context.colors.textMuted,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -151,15 +151,15 @@ class _OsBlockedBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
+          Icon(
             Icons.notifications_off_outlined,
-            color: AppColors.textMuted,
+            color: context.colors.textMuted,
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -169,13 +169,13 @@ class _OsBlockedBanner extends StatelessWidget {
                 Text(
                   'Notifications are turned off for FinAssist on this '
                   'device.',
-                  style: AppTypography.bodyMedium,
+                  style: AppTypography.bodyMedium(context),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   "These settings won't take effect until you allow "
                   'notifications in system settings.',
-                  style: AppTypography.caption,
+                  style: AppTypography.caption(context),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 TextButton(
@@ -183,8 +183,8 @@ class _OsBlockedBanner extends StatelessWidget {
                   style: TextButton.styleFrom(padding: EdgeInsets.zero),
                   child: Text(
                     'Open settings',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.accent,
+                    style: AppTypography.bodyMedium(context).copyWith(
+                      color: context.colors.accent,
                     ),
                   ),
                 ),
@@ -218,7 +218,7 @@ class _ToggleRow extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Row(
@@ -227,15 +227,15 @@ class _ToggleRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTypography.bodyMedium),
-                Text(subtitle, style: AppTypography.caption),
+                Text(title, style: AppTypography.bodyMedium(context)),
+                Text(subtitle, style: AppTypography.caption(context)),
               ],
             ),
           ),
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: AppColors.accent,
+            activeThumbColor: context.colors.accent,
           ),
         ],
       ),
